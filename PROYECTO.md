@@ -1,6 +1,8 @@
 AutoStock — Sistema de Control de Inventario y Reportes para Comercios
+
 1. Definición Inicial y Objetivo Principal
 AutoStock es una aplicación web de gestión interna orientada a vendedores y encargados de depósito. Su objetivo principal es optimizar la administración de productos, automatizar el control de entradas y salidas de stock, generar alertas visuales de reposición para artículos en nivel crítico y emitir reportes exportables en formatos PDF y Excel.
+
 2. Límites del Sistema (Scope Boundary)
 Dentro del Alcance
 Sistema de uso exclusivo para el personal del comercio (vendedores/administradores).
@@ -36,6 +38,7 @@ Contenedorización de MongoDB con Volúmenes: Despliegue de la base de datos med
 Latencia de Endpoints REST: Los endpoints de la API para operaciones CRUD estándar deben responder con un tiempo de latencia inferior a 200 milisegundos bajo carga de trabajo normal.
 Interfaz Adaptable y Tiempos de Respuesta Visual: Diseño adaptable (Responsive) orientado a paneles de administración desktop/tablet, ofreciendo feedback visual inmediato (notificaciones, confirmaciones y spinners de carga) en menos de 100 milisegundos.
 Homogeneidad entre Backends y Frontends: Estricta compatibilidad y simetría en los contratos JSON, endpoints REST, códigos de respuesta HTTP y vistas de usuario entre ambas versiones de Backend (Express y FastAPI) y ambas de Frontend (React y Vue 3)
+
 4. Objetivos Específicos y Medibles (SMART)
 Paridad de Backend (100%): Desarrollar la API REST completa con autenticación, CRUD, lógica de stock y exportación de archivos tanto en Express (Node.js) como en FastAPI (Python), asegurando que ambas versiones compartan la misma estructura de respuestas y endpoints.
 Paridad de Frontend (100%): Implementar la interfaz de administración completa tanto en React como en Vue.js 3, manteniendo idénticas vistas, flujos de navegación, validaciones y consumo de la API.
