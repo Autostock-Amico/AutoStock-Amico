@@ -1,0 +1,15 @@
+# Node / Express
+node_modules/
+npm-debug.log*
+
+# Python / FastAPI
+venv/
+__pycache__/
+*.pyc
+
+# Variables de entorno (nunca deben subirse al repo)
+.env
+.env.local
+
+# Sistema operativo / editores
+.DS_Store
