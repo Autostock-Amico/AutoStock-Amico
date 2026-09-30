@@ -6,8 +6,8 @@ async function hashPassword(plainPassword) {
   });
 }
 
-async function comparePassword(plainPassword, hash) {
+async function verifyPassword(plainPassword, hash) {
   return argon2.verify(hash, plainPassword);
 }
 
-module.exports = { hashPassword, comparePassword };
+module.exports = { hashPassword, verifyPassword };
