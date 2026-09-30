@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { hashPassword, verifyPassword } = require('../utils/hash');
 
@@ -6,31 +7,25 @@ async function register(req, res) {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Todos los campos (username, email, password) son obligatorios' });
+      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
 
-    const existente = await User.findOne({ $or: [{ username }, { email }] });
-    if (existente) {
-      return res.status(400).json({ error: 'El username o email ya esta en uso' });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(400).json({ error: 'El usuario o email ya existe' });
     }
 
-    const passwordHasheada = await hashPassword(password);
-    const nuevoUsuario = new User({
+    const hashedPassword = await hashPassword(password);
+    const newUser = new User({
       username,
       email,
-      password: passwordHasheada,
+      password: hashedPassword
     });
 
-    await nuevoUsuario.save();
-    return res.status(201).json(nuevoUsuario);
+    await newUser.save();
+    res.status(201).json({ message: 'Usuario registrado correctamente' });
   } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ error: 'El username o email ya esta en uso' });
-    }
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: error.message });
-    }
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
 
@@ -39,33 +34,49 @@ async function login(req, res) {
     const { loginIdentifier, password } = req.body;
 
     if (!loginIdentifier || !password) {
-      return res.status(400).json({ error: 'El identificador (username/email) y la contraseña son obligatorios' });
+      return res.status(400).json({ error: 'Identificador y contraseña requeridos' });
     }
 
-    const usuario = await User.findOne({
-      $or: [{ username: loginIdentifier }, { email: loginIdentifier }]
+    const user = await User.findOne({
+      $or: [{ email: loginIdentifier }, { username: loginIdentifier }]
     });
 
-    if (!usuario) {
-      return res.status(401).json({ error: 'Credenciales invalidas' });
+    if (!user) {
+      return res.status(400).json({ error: 'Credenciales inválidas' });
     }
 
-    // Corregido: primero texto plano (password), segundo hash (usuario.password)
-    const esPasswordValida = await verifyPassword(password, usuario.password);
-    if (!esPasswordValida) {
-      return res.status(401).json({ error: 'Credenciales invalidas' });
+    const isValid = await verifyPassword(password, user.password);
+    if (!isValid) {
+      return res.status(400).json({ error: 'Credenciales inválidas' });
     }
 
-    const { password: _, ...datosUsuario } = usuario.toObject();
-    return res.status(200).json({
-      mensaje: 'Login exitoso',
-      usuario: datosUsuario
-    });
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+    );
 
+    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
   } catch (error) {
     console.error('Error en login:', error);
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
 
-module.exports = { register, login };
+async function getProfile(req, res) {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+}
+
+module.exports = {
+  register,
+  login,
+  getProfile
+};

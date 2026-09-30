@@ -1,7 +1,11 @@
-from datetime import datetime, timezone
+import os
+from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException
-from pydantic import ValidationError
+import jwt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, Field, ValidationError
 from pymongo.errors import DuplicateKeyError
 
 from app.core.database import db
@@ -9,6 +13,23 @@ from app.core.security import get_password_hash
 from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()
+ph = PasswordHasher()
+
+SECRET_KEY = os.getenv("JWT_SECRET", "tu_clave_secreta_super_segura")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "480"))
+
+
+class LoginSchema(BaseModel):
+    identifier: str | None = Field(default=None, description="Username o Email")
+    email: str | None = None
+    username: str | None = None
+    password: str
+
+
+class TokenResponse(BaseModel):
+    token: str
+
 
 @router.post("/register", response_model=UserResponse, status_code=201, response_model_by_alias=False)
 async def register(payload: dict):
@@ -34,8 +55,58 @@ async def register(payload: dict):
 
     try:
         resultado = await db.users.insert_one(documento)
+        documento["_id"] = str(resultado.inserted_id)
+        return documento
     except DuplicateKeyError:
         raise HTTPException(status_code=400, detail="El username o email ya esta en uso")
 
-    documento["_id"] = resultado.inserted_id
-    return UserResponse(**documento)
+
+@router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
+async def login(credentials: LoginSchema):
+    """
+    Autentica credenciales contra MongoDB verificando Argon2id
+    y retorna token JWT en formato { "token": "..." }.
+    """
+    login_key = credentials.identifier or credentials.email or credentials.username
+
+    if not login_key or not credentials.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Se requiere un identificador (email o username) y contraseña"
+        )
+
+    # Búsqueda en MongoDB por username o email
+    user = await db.users.find_one(
+        {"$or": [{"username": login_key}, {"email": login_key}]}
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas"
+        )
+
+    # Validación de contraseña con Argon2id
+    try:
+        ph.verify(user["password"], credentials.password)
+    except (VerifyMismatchError, Exception):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas"
+        )
+
+    # Generación de JWT Token
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    payload = {
+        "sub": str(user["_id"]),
+        "email": user.get("email"),
+        "username": user.get("username"),
+        "iat": now,
+        "exp": expire,
+    }
+
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    return {"token": token}
