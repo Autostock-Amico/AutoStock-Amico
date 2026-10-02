@@ -4,13 +4,14 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, ValidationError
 from pymongo.errors import DuplicateKeyError
 
 from app.core.database import db
 from app.core.security import get_password_hash
 from app.schemas.user import UserCreate, UserResponse
+from app.api.deps import get_current_user
 
 router = APIRouter()
 ph = PasswordHasher()
@@ -63,10 +64,6 @@ async def register(payload: dict):
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def login(credentials: LoginSchema):
-    """
-    Autentica credenciales contra MongoDB verificando Argon2id
-    y retorna token JWT en formato { "token": "..." }.
-    """
     login_key = credentials.identifier or credentials.email or credentials.username
 
     if not login_key or not credentials.password:
@@ -75,7 +72,6 @@ async def login(credentials: LoginSchema):
             detail="Se requiere un identificador (email o username) y contraseña"
         )
 
-    # Búsqueda en MongoDB por username o email
     user = await db.users.find_one(
         {"$or": [{"username": login_key}, {"email": login_key}]}
     )
@@ -86,7 +82,6 @@ async def login(credentials: LoginSchema):
             detail="Credenciales inválidas"
         )
 
-    # Validación de contraseña con Argon2id
     try:
         ph.verify(user["password"], credentials.password)
     except (VerifyMismatchError, Exception):
@@ -95,7 +90,6 @@ async def login(credentials: LoginSchema):
             detail="Credenciales inválidas"
         )
 
-    # Generación de JWT Token
     now = datetime.now(timezone.utc)
     expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
@@ -110,3 +104,8 @@ async def login(credentials: LoginSchema):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
     return {"token": token}
+
+
+@router.get("/me", status_code=status.HTTP_200_OK)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    return current_user
