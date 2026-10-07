@@ -112,14 +112,18 @@ const updateStock = async (req, res) => {
       return res.status(400).json({ error: 'La cantidad debe ser un número mayor a cero' });
     }
 
-    if (!['add', 'subtract'].includes(type)) {
-      return res.status(400).json({ error: 'El tipo debe ser "add" o "subtract"' });
+    const typeUpper = typeof type === 'string' ? type.toUpperCase() : '';
+    const isEntry = typeUpper === 'ENTRY' || typeUpper === 'ADD';
+    const isExit = typeUpper === 'EXIT' || typeUpper === 'SUBTRACT';
+
+    if (!isEntry && !isExit) {
+      return res.status(400).json({ error: 'El tipo debe ser "ENTRY" o "EXIT"' });
     }
 
-    const adjustment = type === 'add' ? quantity : -quantity;
+    const adjustment = isEntry ? quantity : -quantity;
     const query = { _id: id };
 
-    if (type === 'subtract') {
+    if (isExit) {
       query.currentStock = { $gte: quantity };
     }
 
