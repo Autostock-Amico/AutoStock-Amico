@@ -5,7 +5,7 @@ import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 from pymongo.errors import DuplicateKeyError
 
 from app.core.database import db
@@ -33,17 +33,12 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/register", response_model=UserResponse, status_code=201, response_model_by_alias=False)
-async def register(payload: dict):
-    try:
-        datos = UserCreate(**payload)
-    except ValidationError as e:
-        raise HTTPException(status_code=400, detail=e.errors()[0]["msg"])
-
+async def register(datos: UserCreate):
     existente = await db.users.find_one(
         {"$or": [{"username": datos.username}, {"email": datos.email}]}
     )
     if existente:
-        raise HTTPException(status_code=400, detail="El username o email ya esta en uso")
+        raise HTTPException(status_code=400, detail="El username o email ya está en uso")
 
     ahora = datetime.now(timezone.utc)
     documento = {
@@ -59,7 +54,7 @@ async def register(payload: dict):
         documento["_id"] = str(resultado.inserted_id)
         return documento
     except DuplicateKeyError:
-        raise HTTPException(status_code=400, detail="El username o email ya esta en uso")
+        raise HTTPException(status_code=400, detail="El username o email ya está en uso")
 
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
