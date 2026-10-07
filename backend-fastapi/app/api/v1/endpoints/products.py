@@ -1,13 +1,39 @@
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.core.database import db
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from app.api.deps import get_current_user
 
 router = APIRouter()
+
+@router.get("", response_model=List[ProductResponse], status_code=status.HTTP_200_OK)
+@router.get("/", response_model=List[ProductResponse], status_code=status.HTTP_200_OK, include_in_schema=False)
+async def get_products(
+    search: Optional[str] = Query(default=None, description="Búsqueda parcial en nombre o SKU"),
+    category: Optional[str] = Query(default=None, description="Filtro por categoría exacto"),
+    current_user: dict = Depends(get_current_user)
+):
+    query = {}
+
+    if search and search.strip():
+        search_regex = {"$regex": search.strip(), "$options": "i"}
+        query["$or"] = [
+            {"name": search_regex},
+            {"sku": search_regex}
+        ]
+
+    if category and category.strip():
+        query["category"] = category.strip()
+
+    cursor = db.products.find(query).sort("createdAt", -1)
+    products = []
+    async for doc in cursor:
+        doc["id"] = str(doc["_id"])
+        products.append(doc)
+    return products
 
 @router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(
@@ -61,7 +87,7 @@ async def update_product(
         )
 
     update_data = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
-    
+
     if "sku" in update_data:
         sku_clean = update_data["sku"].strip()
         sku_duplicate = await db.products.find_one({"sku": sku_clean, "_id": {"$ne": obj_id}})
