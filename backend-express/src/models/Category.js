@@ -4,19 +4,17 @@ const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'El nombre de la categoría es obligatorio'],
+      required: true,
       unique: true,
       trim: true,
     },
     description: {
       type: String,
-      trim: true,
       default: '',
+      trim: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 categorySchema.set('toJSON', {

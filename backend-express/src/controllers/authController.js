@@ -1,82 +1,50 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const { hashPassword, verifyPassword } = require('../utils/hash');
 
-async function register(req, res) {
-  try {
-    const { username, email, password } = req.body;
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_autostock';
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-    }
-
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res.status(400).json({ error: 'El usuario o email ya existe' });
-    }
-
-    const hashedPassword = await hashPassword(password);
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword
-    });
-
-    await newUser.save();
-    res.status(201).json({ message: 'Usuario registrado correctamente' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-}
-
-async function login(req, res) {
+const login = async (req, res) => {
   try {
     const { loginIdentifier, password } = req.body;
 
     if (!loginIdentifier || !password) {
-      return res.status(400).json({ error: 'Identificador y contraseña requeridos' });
+      return res.status(400).json({ error: 'Usuario/email y contraseña requeridos' });
     }
 
     const user = await User.findOne({
-      $or: [{ email: loginIdentifier }, { username: loginIdentifier }]
+      $or: [{ username: loginIdentifier }, { email: loginIdentifier }]
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const isValid = await verifyPassword(password, user.password);
-    if (!isValid) {
-      return res.status(400).json({ error: 'Credenciales inválidas' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+      { id: user._id, role: user.role, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
     );
 
-    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+    return res.status(200).json({
+      message: 'Login exitoso',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error en login Express:', error);
+    return res.status(500).json({ error: 'Error interno del servidor en login' });
   }
-}
-
-async function getProfile(req, res) {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-}
-
-module.exports = {
-  register,
-  login,
-  getProfile
 };
+
+module.exports = { login };

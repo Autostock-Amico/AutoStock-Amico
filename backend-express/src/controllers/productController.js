@@ -1,5 +1,29 @@
 const Product = require('../models/Product');
 
+const getProducts = async (req, res) => {
+  try {
+    const { search, category } = req.query;
+    const query = {};
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: searchRegex },
+        { sku: searchRegex }
+      ];
+    }
+
+    if (category && category.trim()) {
+      query.category = category.trim();
+    }
+
+    const products = await Product.find(query).sort({ createdAt: -1 });
+    return res.status(200).json(products);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error interno al obtener los productos' });
+  }
+};
+
 const createProduct = async (req, res) => {
   try {
     const { name, sku, category, costPrice, salePrice, currentStock, minStock } = req.body;
@@ -79,8 +103,50 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const updateStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity, type } = req.body;
+
+    if (!quantity || typeof quantity !== 'number' || quantity <= 0) {
+      return res.status(400).json({ error: 'La cantidad debe ser un número mayor a cero' });
+    }
+
+    if (!['add', 'subtract'].includes(type)) {
+      return res.status(400).json({ error: 'El tipo debe ser "add" o "subtract"' });
+    }
+
+    const adjustment = type === 'add' ? quantity : -quantity;
+    const query = { _id: id };
+
+    if (type === 'subtract') {
+      query.currentStock = { $gte: quantity };
+    }
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      query,
+      { $inc: { currentStock: adjustment } },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      const exists = await Product.findById(id);
+      if (!exists) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
+      return res.status(400).json({ error: 'Stock insuficiente para realizar la operación' });
+    }
+
+    return res.status(200).json(updatedProduct);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error interno al actualizar el stock' });
+  }
+};
+
 module.exports = {
+  getProducts,
   createProduct,
   updateProduct,
   deleteProduct,
+  updateStock,
 };

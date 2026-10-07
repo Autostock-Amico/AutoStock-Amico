@@ -5,32 +5,32 @@ const getCategories = async (req, res) => {
     const categories = await Category.find().sort({ createdAt: -1 });
     return res.status(200).json(categories);
   } catch (error) {
-    return res.status(500).json({ error: 'Error al obtener las categorías' });
+    return res.status(500).json({ error: 'Error al obtener categorías' });
   }
 };
 
 const createCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
-
     if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'El nombre de la categoría es obligatorio' });
+      return res.status(400).json({ error: 'El nombre es obligatorio' });
     }
 
-    const existingCategory = await Category.findOne({ name: name.trim() });
-    if (existingCategory) {
-      return res.status(400).json({ error: 'Ya existe una categoría con ese nombre' });
+    const nameClean = name.trim();
+    const existing = await Category.findOne({ name: nameClean });
+    if (existing) {
+      return res.status(400).json({ error: 'Ya existe una categoría con este nombre' });
     }
 
     const category = new Category({
-      name: name.trim(),
+      name: nameClean,
       description: description ? description.trim() : '',
     });
 
     await category.save();
     return res.status(201).json(category);
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno al crear la categoría' });
+    return res.status(500).json({ error: 'Error al crear la categoría' });
   }
 };
 
