@@ -42,6 +42,26 @@ async def get_products(
     products = await cursor.to_list(length=100)
     return [serialize_product(p) for p in products]
 
+# GET /api/products/critical-stock (Debe ir ANTES de las rutas con {product_id})
+@router.get("/critical-stock")
+async def get_critical_stock(
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        query = {
+            "$expr": {
+                "$lte": ["$currentStock", "$minStock"]
+            }
+        }
+        cursor = db.products.find(query)
+        critical_products = await cursor.to_list(length=1000)
+        return [serialize_product(p) for p in critical_products]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener productos con stock crítico: {str(e)}"
+        )
+
 @router.patch("/{product_id}/stock")
 async def update_stock(
     product_id: str,

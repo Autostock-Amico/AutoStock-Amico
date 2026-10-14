@@ -1,26 +1,42 @@
 services:
   mongodb:
     image: mongo:latest
-    container_name: mongodb
+    container_name: mongodb_inventory
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: santi
-      MONGO_INITDB_ROOT_PASSWORD: santi123
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-santi}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-santi123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-inventory_db}
     volumes:
       - mongo_data:/data/db
 
-  mongo-express:
-    image: mongo-express:latest
-    container_name: mongo-express
+  backend-express:
+    build:
+      context: ../backend-express
+      dockerfile: Dockerfile
+    container_name: express_app
     restart: always
     ports:
-      - "8081:8081"
+      - "3000:3000"
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: santi
-      ME_CONFIG_MONGODB_ADMINPASSWORD: santi123
-      ME_CONFIG_MONGODB_SERVER: mongodb
+      PORT: 3000
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-santi}:${MONGO_INITDB_ROOT_PASSWORD:-santi123}@mongodb:27017/${MONGO_INITDB_DATABASE:-inventory_db}?authSource=admin
+    depends_on:
+      - mongodb
+
+  backend-fastapi:
+    build:
+      context: ../backend-fastapi
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-santi}:${MONGO_INITDB_ROOT_PASSWORD:-santi123}@mongodb:27017/${MONGO_INITDB_DATABASE:-inventory_db}?authSource=admin
     depends_on:
       - mongodb
 
