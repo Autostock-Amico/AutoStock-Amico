@@ -1,0 +1,81 @@
+HTTP/1.1 200 OK
+date: Fri, 16 Oct 2026 14:20:03 GMT
+server: uvicorn
+content-disposition: attachment; filename="reporte_inventario.pdf"
+content-type: application/pdf
+transfer-encoding: chunked
+
+%PDF-1.3
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/Contents 8 0 R /MediaBox [ 0 0 612 792 ] /Parent 7 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/PageMode /UseNone /Pages 7 0 R /Type /Catalog
+>>
+endobj
+6 0 obj
+<<
+/Author (anonymous) /CreationDate (D:20261016142003+00'00') /Creator (anonymous) /Keywords () /ModDate (D:20261016142003+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (unspecified) /Title (untitled) /Trapped /False
+>>
+endobj
+7 0 obj
+<<
+/Count 1 /Kids [ 4 0 R ] /Type /Pages
+>>
+endobj
+8 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 490
+>>
+stream
+Gat=f4&<aJ'SUa[`>KMC+kV&@h9)Lk&jo[9A*@Bl94^Y1A33K_GjM40(%IS9bIY"*GL*h^?t&SSQS!/]@=Q/1;cNMLH'4r6^fe(qf2M1EY9,(TH_%>c3+For(oe?5F*]Um'5GCS>h>.!a/OM7m=eOEMk,]DIQX)PG'?eHT\=afHqrRlU][GK?8PN(OVNSJf"od43H%?'g^*_QnqI2rHA*lOC/L0^B[D#L+5s!W#jgldjj??.(6,RcW^Ts#)W\PGKicSE1t4e(=WLq?-&d7oRJuEU>\/1QTqeL2Eb8&%8KZ0)&fU)t^)0P3%:VH9=HX#d\Q%:<gpgG6KI\uA_[B4m+5rs+ZUtSl6S:%%N3S%$_Js0Z%Yh\hLC_M($"dV_WbI-EX\UK^K2ZNZXqbg`lg+T0Yea/%i4+,i+$a4K<NWhJe(_;,R?jXa<L^`*MSm8$*WW(NMds_Nfa1p@i7p/)_OU%r>#P8(7fS'lX]NN7l[A~>endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000061 00000 n 
+0000000102 00000 n 
+0000000209 00000 n 
+0000000321 00000 n 
+0000000514 00000 n 
+0000000582 00000 n 
+0000000843 00000 n 
+0000000902 00000 n 
+trailer
+<<
+/ID 
+[<99fe936562aee96531484313a7e243de><99fe936562aee96531484313a7e243de>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 6 0 R
+/Root 5 0 R
+/Size 9
+>>
+startxref
+1482
+%%EOF
