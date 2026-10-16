@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from app.api.v1.endpoints.auth import router as auth_router
-from app.api.v1.endpoints.categories import router as categories_router
 from app.api.v1.endpoints.products import router as products_router
+from app.api.v1.endpoints.reports import router as reports_router
 
-app = FastAPI()
+app = FastAPI(title="AutoStock API", version="1.0.0")
 
-app.include_router(auth_router, prefix="/api/auth")
-app.include_router(categories_router, prefix="/api/categories")
-app.include_router(products_router, prefix="/api/products")
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(products_router, prefix="/api/products", tags=["products"])
+app.include_router(reports_router, prefix="/api/reports", tags=["reports"])
 
 @app.get("/")
-async def root():
-    return {"status": "ok"}
+def read_root():
+    return {"message": "Backend FastAPI AutoStock corriendo perfectamente"}
