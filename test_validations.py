@@ -12,6 +12,6 @@ casos = [
 for nombre, data in casos:
     try:
         user = UserCreate(**data)
-        print(f"{nombre}: OK, se creo -> {user.username}")
+        # print(f"{nombre}: OK, se creo -> {user.username}")
     except ValidationError as e:
-        print(f"{nombre}: ERROR (esperado) -> {e.errors()[0]['msg']}")
+        # print(f"{nombre}: ERROR (esperado) -> {e.errors()[0]['msg']}")
