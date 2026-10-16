@@ -147,10 +147,29 @@ const updateStock = async (req, res) => {
   }
 };
 
+// GET /api/products/critical-stock
+const getCriticalStock = async (req, res) => {
+  try {
+    const criticalProducts = await Product.find({
+      $expr: {
+        $lte: ['$currentStock', '$minStock']
+      }
+    });
+
+    return res.status(200).json(criticalProducts);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Error al obtener productos con stock crítico',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getProducts,
   createProduct,
   updateProduct,
   deleteProduct,
   updateStock,
+  getCriticalStock,
 };
