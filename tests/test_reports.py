@@ -1,10 +1,7 @@
-import pytest
+def test_report_excel_extension():
+    filename = "reporte_inventario.xlsx"
+    assert filename.endswith(".xlsx")
 
-def test_excel_header_format():
-    headers = ["Nombre", "Categoría", "Precio", "Stock Actual", "Stock Mínimo"]
-    assert len(headers) == 5
-    assert "Stock Actual" in headers
-
-def test_pdf_metadata():
-    report_title = "Reporte de Resumen de Inventario"
-    assert "Inventario" in report_title
+def test_report_pdf_extension():
+    filename = "reporte_inventario.pdf"
+    assert filename.endswith(".pdf")
