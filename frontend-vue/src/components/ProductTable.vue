@@ -41,12 +41,20 @@
             </span>
           </td>
           <td style="padding: 12px; text-align: center;">
-            <button
-              @click="$emit('edit', product)"
-              style="padding: 0.3rem 0.6rem; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
-            >
-              Editar
-            </button>
+            <div style="display: flex; gap: 0.4rem; justify-content: center;">
+              <button
+                @click="$emit('adjust-stock', product)"
+                style="padding: 0.3rem 0.6rem; background: #0d6efd; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
+              >
+                Stock
+              </button>
+              <button
+                @click="$emit('edit', product)"
+                style="padding: 0.3rem 0.6rem; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
+              >
+                Editar
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -62,5 +70,5 @@ defineProps({
   }
 });
 
-defineEmits(['edit']);
+defineEmits(['edit', 'adjust-stock']);
 </script>

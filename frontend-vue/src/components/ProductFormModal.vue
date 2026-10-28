@@ -61,11 +61,12 @@
           </div>
 
           <div style="flex: 1;">
-            <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Stock Actual *</label>
+            <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Stock Actual (Máx 10.000) *</label>
             <input
               v-model.number="form.stock"
               type="number"
               min="0"
+              max="10000"
               required
               style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;"
             />
@@ -152,6 +153,11 @@ async function handleSubmit() {
 
   if (!form.value.name || !form.value.category) {
     errorMessage.value = 'Por favor complete todos los campos obligatorios.';
+    return;
+  }
+
+  if (form.value.stock > 10000) {
+    errorMessage.value = 'El stock no puede superar el límite máximo de 10.000 unidades.';
     return;
   }
 
