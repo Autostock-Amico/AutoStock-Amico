@@ -36,20 +36,28 @@
       </div>
     </div>
 
-    <!-- Indicador de Carga / Error -->
+    <!-- Indicador de Carga -->
     <div v-if="loading" style="text-align: center; padding: 2rem; color: #007bff; font-weight: bold;">
       Cargando catálogo...
     </div>
 
     <!-- Componente Tabla -->
-    <ProductTable v-else :products="filteredProducts" @edit="openEditModal" />
+    <ProductTable v-else :products="filteredProducts" @edit="openEditModal" @adjust-stock="openStockModal" />
 
-    <!-- Modal Formulario -->
+    <!-- Modal Formulario de Producto -->
     <ProductFormModal
       :isOpen="isModalOpen"
       :productToEdit="editingProduct"
       @close="isModalOpen = false"
       @saved="handleProductSaved"
+    />
+
+    <!-- Modal Ajuste de Stock -->
+    <StockAdjustmentModal
+      :isOpen="isStockModalOpen"
+      :product="stockProduct"
+      @close="isStockModalOpen = false"
+      @adjusted="handleStockAdjusted"
     />
   </div>
 </template>
@@ -60,6 +68,7 @@ import { useRouter } from 'vue-router';
 import axiosClient from '../api/axiosClient';
 import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
+import StockAdjustmentModal from '../components/StockAdjustmentModal.vue';
 
 const router = useRouter();
 const products = ref([]);
@@ -69,6 +78,9 @@ const loading = ref(true);
 
 const isModalOpen = ref(false);
 const editingProduct = ref(null);
+
+const isStockModalOpen = ref(false);
+const stockProduct = ref(null);
 
 const fetchProducts = async () => {
   loading.value = true;
@@ -126,17 +138,30 @@ const openEditModal = (product) => {
   isModalOpen.value = true;
 };
 
+const openStockModal = (product) => {
+  stockProduct.value = product;
+  isStockModalOpen.value = true;
+};
+
 const handleProductSaved = (savedProduct) => {
   const targetId = savedProduct._id || savedProduct.id;
   const index = products.value.findIndex(p => (p._id || p.id) === targetId);
 
   if (index !== -1) {
-    // Reemplazo del objeto completo para activar la reactividad
     products.value[index] = { ...savedProduct };
     products.value = [...products.value];
   } else {
-    // Agregar nuevo producto arriba de la lista
     products.value = [savedProduct, ...products.value];
+  }
+};
+
+const handleStockAdjusted = (updatedProduct) => {
+  const targetId = updatedProduct._id || updatedProduct.id;
+  const index = products.value.findIndex(p => (p._id || p.id) === targetId);
+
+  if (index !== -1) {
+    products.value[index] = { ...products.value[index], stock: updatedProduct.stock };
+    products.value = [...products.value];
   }
 };
 
