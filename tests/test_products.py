@@ -1,8 +1,9 @@
-def test_product_critical_stock():
-    stock = 2
-    min_stock = 5
-    assert stock <= min_stock
+def test_critical_stock_threshold_logic():
+    current_stock = 4
+    minimum_required = 10
+    is_critical = current_stock < minimum_required
+    assert is_critical is True
 
-def test_product_structure():
-    product = {"name": "Filtro de Aceite", "price": 4500.0, "stock": 10}
-    assert product["price"] > 0
+def test_product_price_validation():
+    price = 1250.50
+    assert price > 0

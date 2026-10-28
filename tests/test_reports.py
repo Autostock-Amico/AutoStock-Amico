@@ -1,7 +1,8 @@
-def test_report_excel_extension():
-    filename = "reporte_inventario.xlsx"
-    assert filename.endswith(".xlsx")
+def test_excel_report_headers():
+    headers = ["ID", "Producto", "Stock", "Precio"]
+    assert "Producto" in headers
+    assert "Stock" in headers
 
-def test_report_pdf_extension():
-    filename = "reporte_inventario.pdf"
-    assert filename.endswith(".pdf")
+def test_supported_report_formats():
+    formats = ["xlsx", "pdf"]
+    assert "pdf" in formats
