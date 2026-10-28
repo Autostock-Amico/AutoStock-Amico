@@ -8,11 +8,12 @@
           <th style="padding: 12px;">Categoría</th>
           <th style="padding: 12px;">Precio Venta</th>
           <th style="padding: 12px;">Stock Actual</th>
+          <th style="padding: 12px; text-align: center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="products.length === 0">
-          <td colspan="5" style="text-align: center; padding: 20px; color: #6c757d;">
+          <td colspan="6" style="text-align: center; padding: 20px; color: #6c757d;">
             No se encontraron productos que coincidan con la búsqueda.
           </td>
         </tr>
@@ -39,6 +40,14 @@
               {{ product.stock || 0 }} u.
             </span>
           </td>
+          <td style="padding: 12px; text-align: center;">
+            <button
+              @click="$emit('edit', product)"
+              style="padding: 0.3rem 0.6rem; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
+            >
+              Editar
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -52,4 +61,6 @@ defineProps({
     required: true
   }
 });
+
+defineEmits(['edit']);
 </script>
