@@ -1,13 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { h } from 'vue';
 import LoginView from '../views/LoginView.vue';
-
-const DashboardView = {
-  render: () => h('div', { style: 'padding: 2rem; font-family: sans-serif;' }, [
-    h('h1', 'Dashboard Principal (Vue)'),
-    h('p', 'Bienvenido al sistema de inventario AutoStock.')
-  ])
-};
+import ProductsView from '../views/ProductsView.vue';
 
 const routes = [
   {
@@ -18,11 +11,16 @@ const routes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: DashboardView,
+    component: ProductsView,
+  },
+  {
+    path: '/products',
+    name: 'Products',
+    component: ProductsView,
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/login',
+    redirect: '/dashboard',
   },
 ];
 
@@ -34,7 +32,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
 
-  if (to.path === '/dashboard' && !token) {
+  if (to.path !== '/login' && !token) {
     next('/login');
   } else if (to.path === '/login' && token) {
     next('/dashboard');
