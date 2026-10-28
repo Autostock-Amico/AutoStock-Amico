@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Login from '../pages/Login';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
@@ -20,7 +21,7 @@ const AppRouter = () => {
           path="/login"
           element={
             <PublicRoute>
-              <div>Pantalla de Login (React)</div>
+              <Login />
             </PublicRoute>
           }
         />
@@ -28,7 +29,10 @@ const AppRouter = () => {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <div>Dashboard Principal (React)</div>
+              <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+                <h1>Dashboard Principal (React)</h1>
+                <p>Bienvenido al sistema de inventario AutoStock.</p>
+              </div>
             </ProtectedRoute>
           }
         />
