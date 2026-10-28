@@ -1,26 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { h } from 'vue';
-import { useAuthStore } from '../stores/authStore';
+import LoginView from '../views/LoginView.vue';
 
-const Login = { render: () => h('div', 'Pantalla de Login (Vue)') };
-const Dashboard = { render: () => h('div', 'Dashboard Principal (Vue)') };
+const DashboardView = {
+  render: () => h('div', { style: 'padding: 2rem; font-family: sans-serif;' }, [
+    h('h1', 'Dashboard Principal (Vue)'),
+    h('p', 'Bienvenido al sistema de inventario AutoStock.')
+  ])
+};
 
 const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: Login,
-    meta: { requiresGuest: true },
+    component: LoginView,
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: Dashboard,
-    meta: { requiresAuth: true },
+    component: DashboardView,
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/dashboard',
+    redirect: '/login',
   },
 ];
 
@@ -30,11 +32,11 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
+  const token = localStorage.getItem('token');
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  if (to.path === '/dashboard' && !token) {
     next('/login');
-  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+  } else if (to.path === '/login' && token) {
     next('/dashboard');
   } else {
     next();
