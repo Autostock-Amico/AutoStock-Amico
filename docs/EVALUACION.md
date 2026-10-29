@@ -3,21 +3,21 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-10-28.
+> Generado: 2026-10-29.
 
 ## 1. Veredicto
 
 | Aspecto | Resultado |
 |---|---|
-| Tipo de proyecto | backend |
-| Índice de calidad de servicios | **50/100** (mínimo 60) |
+| Tipo de proyecto | frontend |
+| Índice de calidad de servicios | **37/100** (mínimo 60) |
 | Criterios cumplidos | **12/15** |
 | Aprobado (semáforo) | **NO** |
-| Código (LOC) | 959 |
-| Archivos de código | 28 |
-| Tests (archivos) | 1 |
+| Código (LOC) | 2,109 |
+| Archivos de código | 51 |
+| Tests (archivos) | 6 |
 | Cobertura de líneas | no medible (mínimo 80%) |
-| Capas detectadas | presentacion, logica, datos |
+| Capas detectadas | vistas, servicios, estado |
 
 > **Aprobado** exige cumplir **todos** los criterios del semáforo. No es una nota: sirve para ordenar y priorizar la revisión.
 
@@ -25,7 +25,7 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| amico12345 | 14 | 1,155 | 0 | 61 | 9 | 100% |
+| amico12345 | 22 | 2,461 | 0 | 61 | 11 | 100% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
 
@@ -35,7 +35,7 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| amico12345 | 9 | 41% | 26 d | 64% | **36** | No aprueba | Cumplimiento 41% (mín. 50%); Pausa 26 d (máx. 10 d) |
+| amico12345 | 10 | 45% | 26 d | 93% | **43** | No aprueba | Cumplimiento 45% (mín. 50%); Pausa 26 d (máx. 10 d) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -47,7 +47,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Un resumen numérico (0-100) que combina todas las señales y métricas del análisis, con topes duros por duplicación.
 - **Por qué importa:** Ordena y prioriza la revisión: un índice bajo indica varias señales que conviene mirar juntas.
-- **Tu resultado:** índice **50/100** _(mínimo 60)_
+- **Tu resultado:** índice **37/100** _(mínimo 60)_
 - **Para investigar la causa:**
     - ¿En qué momento del proyecto se concentraron los problemas (arranque, integración de partes, cierre)?
     - ¿El índice bajó por muchas señales chicas o por una o dos graves?
@@ -57,7 +57,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **2.8%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **4.8%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — OK
 
@@ -75,7 +75,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Si el código está separado en capas reconocibles (backend: presentación / lógica / datos; frontend: vistas / servicios / estado).
 - **Por qué importa:** Sin separación, cada archivo hace de todo y cualquier cambio toca varios lugares a la vez.
-- **Tu resultado:** **3** capa(s) detectada(s): presentacion, logica, datos _(mínimo 2 capas (a partir de 150 LOC))_
+- **Tu resultado:** **3** capa(s) detectada(s): vistas, servicios, estado _(mínimo 2 capas (a partir de 150 LOC))_
 
 ### 6. Acceso a datos dentro del componente (HTTP) — OK
 
@@ -83,15 +83,11 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 - **Por qué importa:** Duplica la lógica de acceso a datos y acopla la vista al backend: un cambio de API toca muchos componentes.
 - **Tu resultado:** **0** llamada(s) a la API dentro de componente(s) _(máximo 0)_
 
-### 7. Depuración olvidada (DBG) — A REVISAR
+### 7. Depuración olvidada (DBG) — OK
 
 - **Qué mide:** Mensajes de depuración olvidados (`console.log`, `print`, `debugger`).
 - **Por qué importa:** Generan ruido en los registros, pueden filtrar datos y dan sensación de código sin terminar.
-- **Tu resultado:** **5** mensaje(s) de depuración olvidado(s) _(máximo 0)_
-- **Para investigar la causa:**
-    - ¿Fue depuración que quedó al cerrar una tarea, o se usó como registro permanente?
-    - ¿Hubo una revisión final antes de cerrar la issue o la entrega?
-    - ¿Quién agregó cada mensaje y con qué objetivo?
+- **Tu resultado:** **0** mensaje(s) de depuración olvidado(s) _(máximo 0)_
 
 ### 8. Uso del tipo `any` (Any) — OK
 
@@ -99,11 +95,15 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 - **Por qué importa:** Se pierde la ayuda del compilador justo donde los datos vienen de afuera (API, formularios).
 - **Tu resultado:** **0** uso(s) de `any` _(máximo 2)_
 
-### 9. Componente demasiado grande (BigC) — OK
+### 9. Componente demasiado grande (BigC) — A REVISAR
 
 - **Qué mide:** Componentes de UI muy extensos, que suelen mezclar render, estado y lógica.
 - **Por qué importa:** Son difíciles de leer, probar y reutilizar, y sus cambios tienen efectos inesperados.
-- **Tu resultado:** **0** componente(s) demasiado grande(s) _(máximo 1)_
+- **Tu resultado:** **3** componente(s) demasiado grande(s) _(máximo 1)_
+- **Para investigar la causa:**
+    - ¿El componente creció a medida que se agregaban requisitos, sin volver a dividirlo?
+    - ¿Mezcla responsabilidades distintas (mostrar, calcular, pedir datos)?
+    - ¿Se dividió por pantalla o por unidad de responsabilidad?
 
 ### 10. Baja cohesión (Coh) — OK
 
@@ -115,13 +115,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **2** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 959 LOC))_
+- **Tu resultado:** **4** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 2109 LOC))_
 
 ### 12. Funciones/métodos largos o con muchos parámetros (Tam) — OK
 
 - **Qué mide:** Tamaño de las funciones/métodos y cantidad de parámetros.
 - **Por qué importa:** Una función que hace varias cosas cuesta leerla, nombrarla y reutilizarla.
-- **Tu resultado:** **4** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
+- **Tu resultado:** **6** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
 
 ### 13. Acoplamiento alto (Acop) — OK
 
@@ -139,11 +139,11 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
     - ¿Los tests prueban el camino principal y los errores, o solo el caso feliz?
     - ¿La suite se puede correr en CI sin base de datos ni servicios externos?
 
-### 15. Endpoints del backend (EP) — OK
+### 15. Vistas del frontend (Vistas) — OK
 
-- **Qué mide:** Cantidad de endpoints (rutas HTTP) expuestos por el backend.
-- **Por qué importa:** El backend se mide por lo que expone: pocos endpoints sugiere poca funcionalidad de servicio.
-- **Tu resultado:** **32** endpoint(s) _(mínimo 10)_
+- **Qué mide:** Cantidad de vistas/componentes de pantalla del frontend.
+- **Por qué importa:** El frontend se mide por pantallas: pocas vistas sugiere poca cobertura de la interfaz pedida.
+- **Tu resultado:** **10** vista(s)/componente(s) _(mínimo 8)_
 
 ## 5. Qué falta para aprobar
 
@@ -151,8 +151,8 @@ Criterios que hoy están en rojo y qué habría que cambiar para alcanzar el niv
 
 | Criterio | Resultado actual | Meta | Qué arreglar |
 |---|---|---|---|
-| Índice de calidad de servicios (indice) | índice **50/100** | mínimo 60 | Subir el índice a ≥60 corrigiendo primero las señales de más peso: duplicación, secretos, SQL y capas. |
-| Depuración olvidada (DBG) | **5** mensaje(s) de depuración olvidado(s) | máximo 0 | Quitar `console.log`/`print`/`debugger` del código de producción; 0 casos. |
+| Índice de calidad de servicios (indice) | índice **37/100** | mínimo 60 | Subir el índice a ≥60 corrigiendo primero las señales de más peso: duplicación, secretos, SQL y capas. |
+| Componente demasiado grande (BigC) | **3** componente(s) demasiado grande(s) | máximo 1 | Dividir el componente por responsabilidad en subcomponentes; ≤1 componente grande. |
 | Cobertura de tests (Cob) | **no medible** (sin tests, sin runner o sin artefacto de cobertura) | mínimo 80% de líneas | Publicar cobertura (o correr la suite con coverage) y cubrir ≥80% de líneas. |
 
 > Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo.
@@ -161,10 +161,10 @@ Criterios que hoy están en rojo y qué habría que cambiar para alcanzar el niv
 
 Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
 
-**Depuración olvidada (DBG)** — 3 archivo(s):
-- `backend-express/index.js`
-- `backend-express/src/config/db.js`
-- `backend-express/src/index.js`
+**Componente demasiado grande (BigC)** — 3 archivo(s):
+- `frontend-vue/src/components/ProductFormModal.vue`
+- `frontend-vue/src/components/StockAdjustmentModal.vue`
+- `frontend-vue/src/views/ProductsView.vue`
 
 ---
 _Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo señalado y el criterio en `CRITERIOS-CALIDAD.md`._
