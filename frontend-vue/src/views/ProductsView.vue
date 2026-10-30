@@ -72,6 +72,7 @@ import axiosClient from '../api/axiosClient';
 import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
 import StockAdjustmentModal from '../components/StockAdjustmentModal.vue';
+import { getLocalProducts, saveLocalProducts } from '../services/storage';
 
 const router = useRouter();
 const products = ref([]);
@@ -92,25 +93,15 @@ const fetchProducts = async () => {
     const data = Array.isArray(response.data) ? response.data : (response.data.products || []);
     if (data.length > 0) {
       products.value = data;
-    } else if (products.value.length === 0) {
-      loadMockData();
+      saveLocalProducts(data);
+    } else {
+      products.value = getLocalProducts();
     }
   } catch (err) {
-    if (products.value.length === 0) {
-      loadMockData();
-    }
+    products.value = getLocalProducts();
   } finally {
     loading.value = false;
   }
-};
-
-const loadMockData = () => {
-  products.value = [
-    { id: '1', sku: 'FLT-001', name: 'Filtro de Aceite', category: 'Filtros', price: 4500, stock: 12 },
-    { id: '2', sku: 'FLT-002', name: 'Filtro de Aire', category: 'Filtros', price: 6200, stock: 3 },
-    { id: '3', sku: 'ACE-010', name: 'Aceite Sintético 5W30', category: 'Lubricantes', price: 28500, stock: 8 },
-    { id: '4', sku: 'PST-005', name: 'Pastillas de Freno Delanteras', category: 'Frenos', price: 18900, stock: 2 }
-  ];
 };
 
 const categories = computed(() => {
@@ -160,6 +151,7 @@ const handleProductSaved = (savedProduct) => {
   } else {
     products.value = [savedProduct, ...products.value];
   }
+  saveLocalProducts(products.value);
 };
 
 const handleStockAdjusted = (updatedProduct) => {
@@ -169,6 +161,7 @@ const handleStockAdjusted = (updatedProduct) => {
   if (index !== -1) {
     products.value[index] = { ...products.value[index], stock: updatedProduct.stock };
     products.value = [...products.value];
+    saveLocalProducts(products.value);
   }
 };
 

@@ -37,7 +37,7 @@
       :isOpen="isModalOpen"
       :productToEdit="editingProduct"
       @close="isModalOpen = false"
-      @saved="fetchCriticalProducts"
+      @saved="handleProductSaved"
     />
 
     <!-- Modal Ajuste de Stock -->
@@ -57,6 +57,7 @@ import axiosClient from '../api/axiosClient';
 import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
 import StockAdjustmentModal from '../components/StockAdjustmentModal.vue';
+import { getLocalProducts, saveLocalProducts } from '../services/storage';
 
 const router = useRouter();
 const criticalProducts = ref([]);
@@ -75,14 +76,8 @@ const fetchCriticalProducts = async () => {
     const data = Array.isArray(response.data) ? response.data : (response.data.products || []);
     criticalProducts.value = data.filter(p => (p.stock || 0) <= 5);
   } catch (err) {
-    // Datos mock de respaldo si no hay conexión backend aún
-    const mockAll = [
-      { id: '1', sku: 'FLT-001', name: 'Filtro de Aceite', category: 'Filtros', price: 4500, stock: 12 },
-      { id: '2', sku: 'FLT-002', name: 'Filtro de Aire', category: 'Filtros', price: 6200, stock: 3 },
-      { id: '3', sku: 'ACE-010', name: 'Aceite Sintético 5W30', category: 'Lubricantes', price: 28500, stock: 8 },
-      { id: '4', sku: 'PST-005', name: 'Pastillas de Freno Delanteras', category: 'Frenos', price: 18900, stock: 2 }
-    ];
-    criticalProducts.value = mockAll.filter(p => p.stock <= 5);
+    const allProducts = getLocalProducts();
+    criticalProducts.value = allProducts.filter(p => (p.stock || 0) <= 5);
   } finally {
     loading.value = false;
   }
@@ -102,7 +97,29 @@ const openStockModal = (product) => {
   isStockModalOpen.value = true;
 };
 
-const handleStockAdjusted = () => {
+const handleProductSaved = (savedProduct) => {
+  const allProducts = getLocalProducts();
+  const targetId = savedProduct._id || savedProduct.id;
+  const index = allProducts.findIndex(p => (p._id || p.id) === targetId);
+
+  if (index !== -1) {
+    allProducts[index] = { ...savedProduct };
+  } else {
+    allProducts.unshift(savedProduct);
+  }
+  saveLocalProducts(allProducts);
+  fetchCriticalProducts();
+};
+
+const handleStockAdjusted = (updatedProduct) => {
+  const allProducts = getLocalProducts();
+  const targetId = updatedProduct._id || updatedProduct.id;
+  const index = allProducts.findIndex(p => (p._id || p.id) === targetId);
+
+  if (index !== -1) {
+    allProducts[index].stock = updatedProduct.stock;
+    saveLocalProducts(allProducts);
+  }
   fetchCriticalProducts();
 };
 
