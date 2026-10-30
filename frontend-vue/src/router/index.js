@@ -1,41 +1,32 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import ProductsView from '../views/ProductsView.vue';
+import CriticalStockView from '../views/CriticalStockView.vue';
 
 const routes = [
-  {
-    path: '/login',
-    name: 'Login',
-    component: LoginView,
-  },
+  { path: '/', redirect: '/login' },
+  { path: '/login', component: LoginView },
   {
     path: '/dashboard',
-    name: 'Dashboard',
     component: ProductsView,
+    meta: { requiresAuth: true }
   },
   {
-    path: '/products',
-    name: 'Products',
-    component: ProductsView,
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/dashboard',
-  },
+    path: '/critical-stock',
+    component: CriticalStockView,
+    meta: { requiresAuth: true }
+  }
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 });
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
-
-  if (to.path !== '/login' && !token) {
+  if (to.meta.requiresAuth && !token) {
     next('/login');
-  } else if (to.path === '/login' && token) {
-    next('/dashboard');
   } else {
     next();
   }
