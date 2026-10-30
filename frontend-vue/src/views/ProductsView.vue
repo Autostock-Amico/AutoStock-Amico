@@ -3,10 +3,13 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
       <h1 style="color: #333; margin: 0;">Catálogo de Productos</h1>
       <div style="display: flex; gap: 0.5rem;">
+        <button @click="goCriticalStock" style="padding: 0.5rem 1rem; background-color: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.3rem;">
+          ⚠️ Stock Crítico
+        </button>
         <button @click="openCreateModal" style="padding: 0.5rem 1rem; background-color: #198754; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
           + Nuevo Producto
         </button>
-        <button @click="handleLogout" style="padding: 0.5rem 1rem; background-color: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        <button @click="handleLogout" style="padding: 0.5rem 1rem; background-color: #6c757d; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
           Cerrar Sesión
         </button>
       </div>
@@ -127,6 +130,10 @@ const filteredProducts = computed(() => {
     return matchesSearch && matchesCategory;
   });
 });
+
+const goCriticalStock = () => {
+  router.push('/critical-stock');
+};
 
 const openCreateModal = () => {
   editingProduct.value = null;
