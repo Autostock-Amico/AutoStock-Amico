@@ -1,72 +1,41 @@
 <template>
-  <div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  <div style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: white;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
       <thead>
-        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; text-align: left;">
-          <th style="padding: 12px;">SKU</th>
-          <th style="padding: 12px;">Nombre</th>
-          <th style="padding: 12px;">Categoría</th>
-          <th style="padding: 12px;">Precio Venta</th>
-          <th style="padding: 12px;">Stock Actual</th>
-          <th style="padding: 12px; text-align: center;">Acciones</th>
+        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+          <th style="padding: 0.75rem 1rem;">SKU</th>
+          <th style="padding: 0.75rem 1rem;">Nombre</th>
+          <th style="padding: 0.75rem 1rem;">Categoría</th>
+          <th style="padding: 0.75rem 1rem; text-align: right;">Precio Venta</th>
+          <th style="padding: 0.75rem 1rem; text-align: center;">Stock Actual</th>
+          <th style="padding: 0.75rem 1rem; text-align: center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="products.length === 0">
-          <td colspan="6" style="text-align: center; padding: 20px; color: #6c757d;">
-            No se encontraron productos en la lista.
-          </td>
-        </tr>
-        <tr
-          v-for="product in products"
-          :key="product._id || product.id || product.sku"
-          :style="{
-            borderBottom: '1px solid #e9ecef',
-            backgroundColor: (product.stock || 0) <= 5 ? '#fff5f5' : 'transparent'
-          }"
-        >
-          <td style="padding: 12px; font-weight: bold; color: #495057;">{{ product.sku }}</td>
-          <td style="padding: 12px;">
-            {{ product.name || product.nombre }}
-            <span v-if="(product.stock || 0) <= 5" style="margin-left: 8px; background: #dc3545; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+        <tr v-for="p in products" :key="p.sku || p.id" style="border-bottom: 1px solid #dee2e6;">
+          <td style="padding: 0.75rem 1rem; font-weight: bold;">{{ p.sku || 'N/A' }}</td>
+          <td style="padding: 0.75rem 1rem;">
+            {{ p.name || p.nombre }}
+            <span v-if="Number(p.stock) <= 5" style="background-color: #dc3545; color: white; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem; font-weight: bold;">
               CRÍTICO
             </span>
           </td>
-          <td style="padding: 12px;">
-            <span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">
-              {{ product.category || product.categoria || 'Sin Categoría' }}
+          <td style="padding: 0.75rem 1rem;">
+            <span style="background: #e9ecef; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+              {{ p.category || p.categoria || 'General' }}
             </span>
           </td>
-          <td style="padding: 12px; color: #28a745; font-weight: bold;">
-            ${{ Number(product.price || product.precio || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }) }}
+          <td style="padding: 0.75rem 1rem; text-align: right; color: #198754; font-weight: bold;">
+            $ {{ Number(p.price || p.precio || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }) }}
           </td>
-          <td style="padding: 12px;">
-            <span :style="{
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '0.85rem',
-              color: '#fff',
-              backgroundColor: (product.stock || 0) <= 5 ? '#dc3545' : '#198754'
-            }">
-              {{ product.stock || 0 }} u.
+          <td style="padding: 0.75rem 1rem; text-align: center;">
+            <span :style="{ backgroundColor: Number(p.stock) <= 5 ? '#dc3545' : '#198754', color: 'white', padding: '0.25rem 0.6rem', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.85rem' }">
+              {{ p.stock }} u.
             </span>
           </td>
-          <td style="padding: 12px; text-align: center;">
-            <div style="display: flex; gap: 0.4rem; justify-content: center;">
-              <button
-                @click="$emit('adjust-stock', product)"
-                style="padding: 0.3rem 0.6rem; background: #0d6efd; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
-              >
-                Stock
-              </button>
-              <button
-                @click="$emit('edit', product)"
-                style="padding: 0.3rem 0.6rem; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
-              >
-                Editar
-              </button>
-            </div>
+          <td style="padding: 0.75rem 1rem; text-align: center;">
+            <button @click="$emit('adjust-stock', p)" style="background: #0d6efd; color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 4px; margin-right: 0.3rem; cursor: pointer; font-weight: bold;">Stock</button>
+            <button @click="$emit('edit-product', p)" style="background: #ffc107; color: #212529; border: none; padding: 0.35rem 0.7rem; border-radius: 4px; cursor: pointer; font-weight: bold;">Editar</button>
           </td>
         </tr>
       </tbody>
@@ -82,5 +51,5 @@ defineProps({
   }
 });
 
-defineEmits(['edit', 'adjust-stock']);
+defineEmits(['adjust-stock', 'edit-product']);
 </script>

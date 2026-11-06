@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:coverage": "vitest run --coverage",
     "dev": "vite",
     "build": "vite build"
   },
