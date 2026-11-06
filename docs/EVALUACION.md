@@ -3,18 +3,18 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-05.
+> Generado: 2026-11-06.
 
 ## 1. Veredicto
 
 | Aspecto | Resultado |
 |---|---|
 | Tipo de proyecto | app |
-| Índice de calidad de servicios | **77/100** (mínimo 50) |
-| Criterios cumplidos | **14/16** |
+| Índice de calidad de servicios | **8/100** (mínimo 50) |
+| Criterios cumplidos | **10/16** |
 | Aprobado (semáforo) | **NO** |
-| Código (LOC) | 2,194 |
-| Archivos de código | 47 |
+| Código (LOC) | 20,077 |
+| Archivos de código | 52 |
 | Tests (archivos) | 6 |
 | Cobertura de líneas | no medible (mínimo 80%) |
 | Capas detectadas | presentacion, logica, datos, vistas, servicios, estado |
@@ -25,7 +25,7 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| amico12345 | 25 | 2,618 | 0 | 61 | 12 | 100% |
+| amico12345 | 26 | 20,539 | 0 | 61 | 13 | 100% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
 
@@ -43,17 +43,21 @@
 
 Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuando el resultado está en rojo, se agregan preguntas para **investigar la causa** (no hay recetas: entender el porqué es parte de la evaluación).
 
-### 1. Índice de calidad de servicios (indice) — OK
+### 1. Índice de calidad de servicios (indice) — A REVISAR
 
 - **Qué mide:** Un resumen numérico (0-100) que combina todas las señales y métricas del análisis, con topes duros por duplicación.
 - **Por qué importa:** Ordena y prioriza la revisión: un índice bajo indica varias señales que conviene mirar juntas.
-- **Tu resultado:** índice **77/100** _(mínimo 50)_
+- **Tu resultado:** índice **8/100** _(mínimo 50)_
+- **Para investigar la causa:**
+    - ¿En qué momento del proyecto se concentraron los problemas (arranque, integración de partes, cierre)?
+    - ¿El índice bajó por muchas señales chicas o por una o dos graves?
+    - ¿Se revisó el código integrado después de unir el trabajo de cada integrante?
 
 ### 2. Duplicación (DRY) (duplicacion) — OK
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **6.6%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **6.4%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — OK
 
@@ -79,11 +83,15 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 - **Por qué importa:** Duplica la lógica de acceso a datos y acopla la vista al backend: un cambio de API toca muchos componentes.
 - **Tu resultado:** **0** llamada(s) a la API dentro de componente(s) _(máximo 0)_
 
-### 7. Depuración olvidada (DBG) — OK
+### 7. Depuración olvidada (DBG) — A REVISAR
 
 - **Qué mide:** Mensajes de depuración olvidados (`console.log`, `print`, `debugger`).
 - **Por qué importa:** Generan ruido en los registros, pueden filtrar datos y dan sensación de código sin terminar.
-- **Tu resultado:** **0** mensaje(s) de depuración olvidado(s) _(máximo 0)_
+- **Tu resultado:** **2** mensaje(s) de depuración olvidado(s) _(máximo 0)_
+- **Para investigar la causa:**
+    - ¿Fue depuración que quedó al cerrar una tarea, o se usó como registro permanente?
+    - ¿Hubo una revisión final antes de cerrar la issue o la entrega?
+    - ¿Quién agregó cada mensaje y con qué objetivo?
 
 ### 8. Uso del tipo `any` (Any) — OK
 
@@ -95,41 +103,50 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Componentes de UI muy extensos, que suelen mezclar render, estado y lógica.
 - **Por qué importa:** Son difíciles de leer, probar y reutilizar, y sus cambios tienen efectos inesperados.
-- **Tu resultado:** **3** componente(s) demasiado grande(s) _(máximo 1)_
+- **Tu resultado:** **4** componente(s) demasiado grande(s) _(máximo 1)_
 - **Para investigar la causa:**
     - ¿El componente creció a medida que se agregaban requisitos, sin volver a dividirlo?
     - ¿Mezcla responsabilidades distintas (mostrar, calcular, pedir datos)?
     - ¿Se dividió por pantalla o por unidad de responsabilidad?
 
-### 10. Baja cohesión (Coh) — OK
+### 10. Baja cohesión (Coh) — A REVISAR
 
 - **Qué mide:** Una clase o unidad cuyos métodos y campos no están relacionados entre sí.
 - **Por qué importa:** Una unidad que cambia por motivos distintos es frágil y cuesta entenderla.
-- **Tu resultado:** **0** unidad(es) con baja cohesión _(máximo 0)_
+- **Tu resultado:** **1** unidad(es) con baja cohesión _(máximo 0)_
+- **Para investigar la causa:**
+    - ¿La unidad agrupa cosas que en realidad pertenecen a lugares distintos?
+    - ¿Cambia por motivos diferentes según la tarea?
+    - ¿Se pensó su responsabilidad antes de escribirla, o se fue agregando?
 
-### 11. Complejidad alta (Compl) — OK
+### 11. Complejidad alta (Compl) — A REVISAR
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **4** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 2194 LOC))_
+- **Tu resultado:** **191** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 20077 LOC))_
+- **Para investigar la causa:**
+    - ¿Se agregaron condiciones a medida que aparecían casos nuevos?
+    - ¿Se probaron todos los caminos o solo el caso principal?
+    - ¿Hay reglas de negocio mezcladas con detalles técnicos?
 
 ### 12. Funciones/métodos largos o con muchos parámetros (Tam) — OK
 
 - **Qué mide:** Tamaño de las funciones/métodos y cantidad de parámetros.
 - **Por qué importa:** Una función que hace varias cosas cuesta leerla, nombrarla y reutilizarla.
-- **Tu resultado:** **6** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
+- **Tu resultado:** **161** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
 
 ### 13. Acoplamiento alto (Acop) — OK
 
 - **Qué mide:** Cuánto depende una unidad de las partes internas de otra.
 - **Por qué importa:** Piezas muy enlazadas hacen que un cambio se propague y que sea difícil reemplazar partes.
-- **Tu resultado:** **0** unidad(es) con acoplamiento alto _(máximo 2 por 1000 LOC)_
+- **Tu resultado:** **1** unidad(es) con acoplamiento alto _(máximo 2 por 1000 LOC)_
 
 ### 14. Cobertura de tests (Cob) — A REVISAR
 
 - **Qué mide:** Porcentaje de líneas de código ejecutadas por la suite de tests (cobertura real, no cantidad de archivos de test).
 - **Por qué importa:** Un test que existe pero no ejecuta el código no protege de nada: la cobertura muestra qué partes quedan sin verificar.
-- **Tu resultado:** **no medible** (sin tests, sin runner o sin artefacto de cobertura) _(mínimo 80% de líneas)_
+- **Tu resultado:** **no medible** — hay tests y dependencias, pero no en la misma unidad: poné `tests/` y `requirements.txt` (o `pyproject.toml`) en el mismo paquete _(mínimo 80% de líneas)_
+- **Causa detectada:** hay tests y dependencias, pero no en la misma unidad: poné `tests/` y `requirements.txt` (o `pyproject.toml`) en el mismo paquete
 - **Para investigar la causa:**
     - ¿Qué módulos o ramas del sistema nunca se ejecutan en los tests?
     - ¿Los tests prueban el camino principal y los errores, o solo el caso feliz?
@@ -153,8 +170,12 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 | Criterio | Resultado actual | Meta | Brecha | Cómo alcanzarlo |
 |---|---|---|---|---|
-| Componente demasiado grande (BigC) | **3** componente(s) demasiado grande(s) | máximo 1 | 2 componente(s) de más | Dividí el componente por responsabilidad en subcomponentes (render, estado, acceso a datos) y dejá el original sólo como orquestador. Meta: ≤1 componente grande. |
-| Cobertura de tests (Cob) | **no medible** (sin tests, sin runner o sin artefacto de cobertura) | mínimo 80% de líneas | no medible: generá el artefacto o corré la suite | Agregá o ampliá tests que ejecuten los módulos sin cubrir (camino principal y errores) y publicá el artefacto (`coverage/lcov.info`, `coverage-summary.json`, `coverage.xml` o `coverage.json`) o corré la suite con coverage. Meta: ≥80% de líneas. |
+| Índice de calidad de servicios (indice) | índice **8/100** | mínimo 50 | faltan 42 pts | El índice sólo penaliza lo que **excede** los umbrales de cada criterio: si tenés todo en verde, el índice es 100. Si está en rojo, mirá la columna **Brecha** y los criterios en rojo; corregí primero duplicación, SEC, SQL y capas. Meta del perfil exigente: ≥50. |
+| Depuración olvidada (DBG) | **2** mensaje(s) de depuración olvidado(s) | máximo 0 | 2 caso(s) a eliminar | Borrá `console.log`/`print`/`debugger` del código de producción. Si necesitás registro, usá el logger del proyecto con el nivel adecuado. Meta: 0 casos. |
+| Componente demasiado grande (BigC) | **4** componente(s) demasiado grande(s) | máximo 1 | 3 componente(s) de más | Dividí el componente por responsabilidad en subcomponentes (render, estado, acceso a datos) y dejá el original sólo como orquestador. Meta: ≤1 componente grande. |
+| Baja cohesión (Coh) | **1** unidad(es) con baja cohesión | máximo 0 | 1 clase(s) a separar | Separá la clase en unidades con una sola responsabilidad: si los métodos cambian por motivos distintos, son clases distintas. Meta: 0 clases con baja cohesión. |
+| Complejidad alta (Compl) | **191** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 20077 LOC) | 191 hallazgo(s); el máximo para 20,077 LOC es 100.4 | Extraé condiciones y ramas a funciones con nombre propio, usá retornos tempranos y evitá anidar `if`/`switch`. Meta: ≤5 bloques por 1000 LOC. |
+| Cobertura de tests (Cob) | **no medible** — hay tests y dependencias, pero no en la misma unidad: poné `tests/` y `requirements.txt` (o `pyproject.toml`) en el mismo paquete | mínimo 80% de líneas | no medible: generá el artefacto o corré la suite | Unificá la suite y las dependencias en el mismo paquete: `tests/` + `requirements.txt`/`pyproject.toml` (o publicá el artefacto de cobertura en el repo). Después corré la suite y apuntá a ≥80% de líneas. |
 
 > Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo. Después de corregir, volvé a correr la medición: el semáforo se recalcula sobre `main`.
 
@@ -162,10 +183,26 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
 
-**Componente demasiado grande (BigC)** — 3 archivo(s):
+**Depuración olvidada (DBG)** — 1 archivo(s):
+- `frontend-vue/.vite/deps/pinia.js`
+
+**Componente demasiado grande (BigC)** — 4 archivo(s):
 - `frontend-vue/src/components/ProductFormModal.vue`
 - `frontend-vue/src/components/StockAdjustmentModal.vue`
+- `frontend-vue/src/views/CriticalStockView.vue`
 - `frontend-vue/src/views/ProductsView.vue`
+
+**Baja cohesión (Coh)** — 1 archivo(s):
+- `frontend-vue/.vite/deps/chunk-ZWJT42GU.js`
+
+**Complejidad alta (Compl)** — 7 archivo(s):
+- `backend-fastapi/app/api/v1/endpoints/auth.py`
+- `backend-fastapi/app/api/v1/endpoints/products.py`
+- `frontend-vue/.vite/deps/chunk-ZWJT42GU.js`
+- `frontend-vue/.vite/deps/pinia.js`
+- `frontend-vue/.vite/deps/vue-router.js`
+- `frontend-vue/src/components/ProductFormModal.vue`
+- `frontend-vue/src/components/StockAdjustmentModal.vue`
 
 ---
 _Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo señalado y el criterio en `CRITERIOS-CALIDAD.md`._
