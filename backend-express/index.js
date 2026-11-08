@@ -1,4 +1,7 @@
+require('dotenv').config();
 const app = require('./src/index');
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {});
+app.listen(PORT, () => {
+  console.log(`Express escuchando en http://localhost:${PORT}`);
+});

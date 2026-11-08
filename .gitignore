@@ -8,8 +8,14 @@ __pycache__/
 *.pyc
 
 # Variables de entorno (nunca deben subirse al repo)
+# Cubre .env y variantes (.env.local, .env.express, .env.fastapi) en todas las carpetas
 .env
-.env.local
+.env.*
+!.env.example
+
+# Cache y builds de Vite
+.vite/
+dist/
 
 # Sistema operativo / editores
 .DS_Store
