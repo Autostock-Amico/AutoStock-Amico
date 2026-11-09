@@ -7,9 +7,9 @@
       </div>
 
       <div v-if="product" style="background: #f8f9fa; padding: 0.75rem; border-radius: 6px; margin-bottom: 1.2rem; border-left: 4px solid #0d6efd;">
-        <div style="font-weight: bold; color: #212529;">{{ product.name || product.nombre }}</div>
+        <div style="font-weight: bold; color: #212529;">{{ product.name }}</div>
         <div style="font-size: 0.85rem; color: #6c757d;">
-          SKU: <strong>{{ product.sku }}</strong> | Stock Actual: <strong>{{ product.stock || 0 }} u.</strong>
+          SKU: <strong>{{ product.sku }}</strong> | Stock Actual: <strong>{{ product.currentStock }} u.</strong>
         </div>
       </div>
 
@@ -93,7 +93,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import axiosClient from '../api/axiosClient';
+import { adjustStock, getApiErrorMessage } from '../services/productService';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -102,69 +102,50 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'adjusted']);
 
+const MAX_STOCK = 10000;
+
 const type = ref('IN');
 const quantity = ref(1);
 const isSubmitting = ref(false);
 const errorMessage = ref('');
 
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    type.value = 'IN';
-    quantity.value = 1;
-    errorMessage.value = '';
-  }
+watch(() => props.isOpen, (open) => {
+  if (!open) return;
+  type.value = 'IN';
+  quantity.value = 1;
+  errorMessage.value = '';
 });
 
-function closeModal() {
+const closeModal = () => {
   errorMessage.value = '';
   emit('close');
-}
+};
 
-async function handleSubmit() {
-  if (!quantity.value || quantity.value <= 0) {
-    errorMessage.value = 'La cantidad debe ser un número entero mayor a 0.';
-    return;
+const validate = (qty, current) => {
+  if (!Number.isInteger(qty) || qty <= 0) return 'La cantidad debe ser un número entero mayor a 0.';
+  if (type.value === 'OUT' && qty > current) {
+    return `Stock insuficiente. Intenta retirar ${qty} u. pero solo hay ${current} u. disponibles.`;
   }
-
-  const currentStock = Number(props.product?.stock || 0);
-
-  if (type.value === 'OUT' && quantity.value > currentStock) {
-    errorMessage.value = `Stock insuficiente. Intenta retirar ${quantity.value} u. pero solo hay ${currentStock} u. disponibles.`;
-    return;
+  if (type.value === 'IN' && current + qty > MAX_STOCK) {
+    return `No se puede superar el stock máximo permitido de 10.000 unidades. (Stock actual: ${current} u.)`;
   }
+  return '';
+};
 
-  if (type.value === 'IN' && (currentStock + Number(quantity.value)) > 10000) {
-    errorMessage.value = `No se puede superar el stock máximo permitido de 10.000 unidades. (Stock actual: ${currentStock} u.)`;
-    return;
-  }
+const handleSubmit = async () => {
+  const qty = Number(quantity.value);
+  errorMessage.value = validate(qty, Number(props.product.currentStock));
+  if (errorMessage.value) return;
 
   isSubmitting.value = true;
-  errorMessage.value = '';
-
-  const targetId = props.product._id || props.product.id;
-  const delta = type.value === 'IN' ? Number(quantity.value) : -Number(quantity.value);
-  const newStock = Math.min(10000, Math.max(0, currentStock + delta));
-
   try {
-    const response = await axiosClient.patch(`/products/${targetId}/stock`, {
-      type: type.value,
-      quantity: Number(quantity.value)
-    });
-
-    const updatedProduct = {
-      ...props.product,
-      stock: response.data?.stock ?? newStock
-    };
-    emit('adjusted', updatedProduct);
+    const updated = await adjustStock(props.product.id, type.value, qty);
+    emit('adjusted', updated);
+    closeModal();
   } catch (err) {
-    const updatedProduct = {
-      ...props.product,
-      stock: newStock
-    };
-    emit('adjusted', updatedProduct);
+    errorMessage.value = getApiErrorMessage(err, 'No se pudo ajustar el stock.');
   } finally {
     isSubmitting.value = false;
-    closeModal();
   }
-}
+};
 </script>
