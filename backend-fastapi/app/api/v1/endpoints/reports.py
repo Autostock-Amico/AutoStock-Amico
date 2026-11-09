@@ -1,94 +1,119 @@
 import io
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+
 from app.core.database import db
 
 router = APIRouter()
 
+EXCEL_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+EXCEL_HEADERS = ["SKU", "Nombre", "Categoría", "Precio Costo", "Precio Venta", "Stock Actual", "Stock Mínimo", "Estado"]
+
+
+def is_critical(product: dict) -> bool:
+    return product.get("currentStock", 0) <= product.get("minStock", 0)
+
+
+def product_row(product: dict) -> list:
+    return [
+        product.get("sku", ""),
+        product.get("name", ""),
+        product.get("category", ""),
+        float(product.get("costPrice", 0)),
+        float(product.get("salePrice", 0)),
+        int(product.get("currentStock", 0)),
+        int(product.get("minStock", 0)),
+        "CRÍTICO" if is_critical(product) else "OK",
+    ]
+
+
+def inventory_metrics(products: list) -> dict:
+    return {
+        "total_items": len(products),
+        "total_units": sum(int(p.get("currentStock", 0)) for p in products),
+        "cost_value": sum(float(p.get("costPrice", 0)) * int(p.get("currentStock", 0)) for p in products),
+        "sale_value": sum(float(p.get("salePrice", 0)) * int(p.get("currentStock", 0)) for p in products),
+    }
+
+
+def file_response(stream: io.BytesIO, media_type: str, filename: str) -> StreamingResponse:
+    stream.seek(0)
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(stream, media_type=media_type, headers=headers)
+
+
+async def load_products() -> list:
+    return await db.products.find().sort("name", 1).to_list(length=1000)
+
+
 @router.get("/excel")
 async def get_excel_report():
-    try:
-        products = await db["products"].find().to_list(1000)
+    products = await load_products()
 
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Inventario"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventario"
+    ws.append(EXCEL_HEADERS)
+    for product in products:
+        ws.append(product_row(product))
 
-        ws.append(["Nombre", "Categoría", "Precio", "Stock Actual", "Stock Mínimo"])
+    stream = io.BytesIO()
+    wb.save(stream)
+    return file_response(stream, EXCEL_MEDIA_TYPE, "reporte_inventario.xlsx")
 
-        for prod in products:
-            ws.append([
-                str(prod.get("name", "N/A")),
-                str(prod.get("category", "N/A")),
-                float(prod.get("price", 0)),
-                int(prod.get("stock", 0)),
-                int(prod.get("minStock", 0))
-            ])
 
-        stream = io.BytesIO()
-        wb.save(stream)
-        stream.seek(0)
+class PdfWriter:
+    """Escribe líneas en el PDF y agrega páginas cuando se termina el espacio."""
 
-        headers = {
-            'Content-Disposition': 'attachment; filename="reporte_inventario.xlsx"'
-        }
+    def __init__(self, stream: io.BytesIO):
+        self.pdf = canvas.Canvas(stream, pagesize=letter)
+        self.y = 750
 
-        return StreamingResponse(
-            stream,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers=headers
+    def line(self, text: str, font: str = "Helvetica", size: int = 10, gap: int = 15) -> None:
+        if self.y < 50:
+            self.pdf.showPage()
+            self.y = 750
+        self.pdf.setFont(font, size)
+        self.pdf.drawString(50, self.y, text)
+        self.y -= gap
+
+    def save(self) -> None:
+        self.pdf.save()
+
+
+def write_summary(writer: PdfWriter, metrics: dict) -> None:
+    writer.line("Reporte de Inventario - AutoStock", "Helvetica-Bold", 16, 30)
+    writer.line(f"Total de productos: {metrics['total_items']}", size=12)
+    writer.line(f"Unidades en stock: {metrics['total_units']}", size=12)
+    writer.line(f"Valorización a costo: ${metrics['cost_value']:,.2f}", size=12)
+    writer.line(f"Valorización a venta: ${metrics['sale_value']:,.2f}", size=12, gap=30)
+
+
+def write_product_list(writer: PdfWriter, title: str, products: list) -> None:
+    writer.line(title, "Helvetica-Bold", 12, 20)
+    if not products:
+        writer.line("Sin productos.")
+    for p in products:
+        writer.line(
+            f"{p.get('sku', '')} | {p.get('name', '')} | Cat: {p.get('category', '')} | "
+            f"Stock: {p.get('currentStock', 0)} (mín. {p.get('minStock', 0)}) | Venta: ${p.get('salePrice', 0)}"
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    writer.line("", gap=15)
+
 
 @router.get("/pdf")
 async def get_pdf_report():
-    try:
-        products = await db["products"].find().to_list(1000)
+    products = await load_products()
 
-        stream = io.BytesIO()
-        p = canvas.Canvas(stream, pagesize=letter)
-        
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(100, 750, "Reporte de Resumen de Inventario (FastAPI)")
+    stream = io.BytesIO()
+    writer = PdfWriter(stream)
+    write_summary(writer, inventory_metrics(products))
+    write_product_list(writer, "Reposición urgente (stock crítico):", [p for p in products if is_critical(p)])
+    write_product_list(writer, "Detalle de productos:", products)
+    writer.save()
 
-        total_productos = len(products)
-        total_stock = sum(int(p_item.get("stock", 0)) for p_item in products)
-        valor_total = sum(float(p_item.get("price", 0)) * int(p_item.get("stock", 0)) for p_item in products)
-
-        p.setFont("Helvetica", 12)
-        p.drawString(100, 720, f"Total de ítems registrados: {total_productos}")
-        p.drawString(100, 705, f"Unidades en stock total: {total_stock}")
-        p.drawString(100, 690, f"Valoración estimativa del inventario: ${valor_total:.2f}")
-
-        y = 650
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(100, y, "Detalle de Productos:")
-        y -= 20
-
-        p.setFont("Helvetica", 10)
-        for idx, prod in enumerate(products, 1):
-            linea = f"{idx}. {prod.get('name', 'N/A')} | Cat: {prod.get('category', 'N/A')} | Stock: {prod.get('stock', 0)} | Precio: ${prod.get('price', 0)}"
-            p.drawString(100, y, linea)
-            y -= 15
-            if y < 50:
-                p.showPage()
-                y = 750
-
-        p.save()
-        stream.seek(0)
-
-        headers = {
-            'Content-Disposition': 'attachment; filename="reporte_inventario.pdf"'
-        }
-
-        return StreamingResponse(
-            stream,
-            media_type="application/pdf",
-            headers=headers
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return file_response(stream, "application/pdf", "reporte_inventario.pdf")

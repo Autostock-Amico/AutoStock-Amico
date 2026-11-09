@@ -47,11 +47,11 @@
           />
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
           <div style="flex: 1;">
-            <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Precio Venta ($) *</label>
+            <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Precio Costo ($) *</label>
             <input
-              v-model.number="form.price"
+              v-model.number="form.costPrice"
               type="number"
               min="0"
               step="0.01"
@@ -59,11 +59,35 @@
               style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;"
             />
           </div>
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Precio Venta ($) *</label>
+            <input
+              v-model.number="form.salePrice"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;"
+            />
+          </div>
+        </div>
 
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
           <div style="flex: 1;">
             <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Stock Actual (Máx 10.000) *</label>
             <input
-              v-model.number="form.stock"
+              v-model.number="form.currentStock"
+              type="number"
+              min="0"
+              max="10000"
+              required
+              style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;"
+            />
+          </div>
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Stock Mínimo *</label>
+            <input
+              v-model.number="form.minStock"
               type="number"
               min="0"
               max="10000"
@@ -96,7 +120,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import axiosClient from '../api/axiosClient';
+import { createProduct, updateProduct, getApiErrorMessage } from '../services/productService';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -105,90 +129,54 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved']);
 
+const SKU_REGEX = /^[A-Z]{3}-\d{3,}$/;
+const MAX_STOCK = 10000;
+const EMPTY_FORM = { sku: '', name: '', category: '', costPrice: 0, salePrice: 0, currentStock: 0, minStock: 0 };
+
 const isSubmitting = ref(false);
 const errorMessage = ref('');
+const form = ref({ ...EMPTY_FORM });
 
-const isEditing = computed(() => !!props.productToEdit?._id || !!props.productToEdit?.id);
+const isEditing = computed(() => !!props.productToEdit?.id);
 
-const form = ref({
-  sku: '',
-  name: '',
-  category: '',
-  price: 0,
-  stock: 0
-});
-
-watch(() => props.productToEdit, (newVal) => {
-  if (newVal) {
-    form.value = {
-      sku: newVal.sku || '',
-      name: newVal.name || newVal.nombre || '',
-      category: newVal.category || newVal.categoria || '',
-      price: newVal.price || newVal.precio || 0,
-      stock: newVal.stock || 0
-    };
-  } else {
-    resetForm();
-  }
-}, { immediate: true, deep: true });
-
-function resetForm() {
-  form.value = { sku: '', name: '', category: '', price: 0, stock: 0 };
+const fillForm = (product) => {
+  form.value = product ? { ...EMPTY_FORM, ...pickFields(product) } : { ...EMPTY_FORM };
   errorMessage.value = '';
-}
+};
 
-function closeModal() {
-  resetForm();
+const pickFields = (product) =>
+  Object.fromEntries(Object.keys(EMPTY_FORM).map(key => [key, product[key] ?? EMPTY_FORM[key]]));
+
+watch(() => props.productToEdit, fillForm, { immediate: true });
+
+const validate = (data) => {
+  if (!SKU_REGEX.test(data.sku)) return 'El SKU debe contener 3 letras, un guión y al menos 3 números (Ej: ART-001).';
+  if (!data.name.trim() || !data.category.trim()) return 'Por favor complete todos los campos obligatorios.';
+  if (data.currentStock > MAX_STOCK) return 'El stock no puede superar el límite máximo de 10.000 unidades.';
+  return '';
+};
+
+const closeModal = () => {
+  fillForm(null);
   emit('close');
-}
+};
 
-async function handleSubmit() {
-  const formattedSku = form.value.sku.trim().toUpperCase();
-  const skuRegex = /^[A-Z]{3}-\d{3,}$/;
-
-  if (!skuRegex.test(formattedSku)) {
-    errorMessage.value = 'El SKU debe contener 3 letras, un guión y al menos 3 números (Ej: ART-001).';
-    return;
-  }
-
-  if (!form.value.name || !form.value.category) {
-    errorMessage.value = 'Por favor complete todos los campos obligatorios.';
-    return;
-  }
-
-  if (form.value.stock > 10000) {
-    errorMessage.value = 'El stock no puede superar el límite máximo de 10.000 unidades.';
-    return;
-  }
+const handleSubmit = async () => {
+  const data = { ...form.value, sku: form.value.sku.trim().toUpperCase() };
+  errorMessage.value = validate(data);
+  if (errorMessage.value) return;
 
   isSubmitting.value = true;
-  errorMessage.value = '';
-
-  const targetId = isEditing.value ? (props.productToEdit._id || props.productToEdit.id) : Date.now().toString();
-
-  const formattedProduct = {
-    id: targetId,
-    _id: targetId,
-    sku: formattedSku,
-    name: form.value.name,
-    category: form.value.category,
-    price: Number(form.value.price),
-    stock: Number(form.value.stock)
-  };
-
-  emit('saved', formattedProduct);
-
   try {
-    if (isEditing.value) {
-      await axiosClient.put(`/products/${targetId}`, formattedProduct);
-    } else {
-      await axiosClient.post('/products', formattedProduct);
-    }
+    const saved = isEditing.value
+      ? await updateProduct(props.productToEdit.id, data)
+      : await createProduct(data);
+    emit('saved', saved);
+    closeModal();
   } catch (err) {
-    // Modo offline/demo local
+    errorMessage.value = getApiErrorMessage(err, 'No se pudo guardar el producto.');
   } finally {
     isSubmitting.value = false;
-    closeModal();
   }
-}
+};
 </script>

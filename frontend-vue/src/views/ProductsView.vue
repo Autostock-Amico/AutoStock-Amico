@@ -47,7 +47,17 @@
     </div>
 
     <!-- Componente Tabla -->
-    <ProductTable v-else :products="filteredProducts" @edit="openEditModal" @adjust-stock="openStockModal" />
+    <div v-else-if="errorMessage" style="background: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;">
+      {{ errorMessage }}
+    </div>
+
+    <ProductTable
+      v-if="!loading"
+      :products="filteredProducts"
+      @edit="openEditModal"
+      @adjust-stock="openStockModal"
+      @delete="handleDelete"
+    />
 
     <!-- Modal Formulario de Producto -->
     <ProductFormModal
@@ -62,29 +72,31 @@
       :isOpen="isStockModalOpen"
       :product="stockProduct"
       @close="isStockModalOpen = false"
-      @adjusted="handleStockAdjusted"
+      @adjusted="handleProductSaved"
     />
   </div>
 </template>
 
 <script setup>
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axiosClient from '../api/axiosClient';
 import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
 import StockAdjustmentModal from '../components/StockAdjustmentModal.vue';
-import { getLocalProducts, saveLocalProducts } from '../services/storage';
+import {
+  getProducts,
+  deleteProduct,
+  downloadExcelReport,
+  downloadPdfReport,
+  getApiErrorMessage
+} from '../services/productService';
 
 const router = useRouter();
 const products = ref([]);
 const searchQuery = ref('');
 const selectedCategory = ref('');
 const loading = ref(true);
+const errorMessage = ref('');
 
 const isModalOpen = ref(false);
 const editingProduct = ref(null);
@@ -94,43 +106,28 @@ const stockProduct = ref(null);
 
 const fetchProducts = async () => {
   loading.value = true;
+  errorMessage.value = '';
   try {
-    const response = await axiosClient.get('/products');
-    const data = Array.isArray(response.data) ? response.data : (response.data.products || []);
-    if (data.length > 0) {
-      products.value = data;
-      saveLocalProducts(data);
-    } else {
-      products.value = getLocalProducts();
-    }
+    products.value = await getProducts();
   } catch (err) {
-    products.value = getLocalProducts();
+    errorMessage.value = getApiErrorMessage(err, 'No se pudieron cargar los productos.');
   } finally {
     loading.value = false;
   }
 };
 
-const categories = computed(() => {
-  const cats = products.value.map(p => p.category || p.categoria).filter(Boolean);
-  return [...new Set(cats)];
-});
+const categories = computed(() => [...new Set(products.value.map(p => p.category).filter(Boolean))]);
 
 const filteredProducts = computed(() => {
-  return products.value.filter(product => {
-    const name = (product.name || product.nombre || '').toLowerCase();
-    const sku = (product.sku || '').toLowerCase();
-    const query = searchQuery.value.toLowerCase();
-
-    const matchesSearch = name.includes(query) || sku.includes(query);
-    const matchesCategory = !selectedCategory.value || (product.category || product.categoria) === selectedCategory.value;
-
+  const query = searchQuery.value.toLowerCase();
+  return products.value.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query);
+    const matchesCategory = !selectedCategory.value || p.category === selectedCategory.value;
     return matchesSearch && matchesCategory;
   });
 });
 
-const goCriticalStock = () => {
-  router.push('/critical-stock');
-};
+const goCriticalStock = () => router.push('/critical-stock');
 
 const openCreateModal = () => {
   editingProduct.value = null;
@@ -147,106 +144,37 @@ const openStockModal = (product) => {
   isStockModalOpen.value = true;
 };
 
-const handleProductSaved = (savedProduct) => {
-  const targetId = savedProduct._id || savedProduct.id;
-  const index = products.value.findIndex(p => (p._id || p.id) === targetId);
-
-  if (index !== -1) {
-    products.value[index] = { ...savedProduct };
-    products.value = [...products.value];
-  } else {
-    products.value = [savedProduct, ...products.value];
-  }
-  saveLocalProducts(products.value);
+const handleProductSaved = (saved) => {
+  const exists = products.value.some(p => p.id === saved.id);
+  products.value = exists ? products.value.map(p => (p.id === saved.id ? saved : p)) : [saved, ...products.value];
 };
 
-const handleStockAdjusted = (updatedProduct) => {
-  const targetId = updatedProduct._id || updatedProduct.id;
-  const index = products.value.findIndex(p => (p._id || p.id) === targetId);
-
-  if (index !== -1) {
-    products.value[index] = { ...products.value[index], stock: updatedProduct.stock };
-    products.value = [...products.value];
-    saveLocalProducts(products.value);
+const handleDelete = async (product) => {
+  if (!window.confirm(`¿Eliminar el producto ${product.sku} - ${product.name}?`)) return;
+  try {
+    await deleteProduct(product.id);
+    products.value = products.value.filter(p => p.id !== product.id);
+  } catch (err) {
+    errorMessage.value = getApiErrorMessage(err, 'No se pudo eliminar el producto.');
   }
 };
+
+const runExport = async (exportFn) => {
+  try {
+    await exportFn();
+  } catch (err) {
+    errorMessage.value = getApiErrorMessage(err, 'No se pudo generar el reporte.');
+  }
+};
+
+const exportToExcel = () => runExport(downloadExcelReport);
+const exportToPDF = () => runExport(downloadPdfReport);
 
 const handleLogout = () => {
   localStorage.removeItem('token');
+  localStorage.removeItem('user');
   router.push('/login');
 };
 
-onMounted(() => {
-  fetchProducts();
-});
-
-const exportToExcel = () => {
-  const allProducts = typeof products !== 'undefined' ? products.value : [];
-  if (!allProducts || allProducts.length === 0) return alert('No hay productos en el inventario para exportar');
-  
-  const data = allProducts.map(p => ({
-    SKU: String(p.sku || 'N/A'),
-    Producto: String(p.name || p.nombre || 'Sin nombre'),
-    Categoría: String(p.category || p.categoria || 'General'),
-    Precio: Number(p.price || p.precio || 0),
-    Stock: Number(p.stock || 0)
-  }));
-
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
-  XLSX.writeFile(workbook, 'Reporte_Inventario_General.xlsx');
-};
-
-const exportToPDF = () => {
-  const allProducts = typeof products !== 'undefined' ? products.value : [];
-  if (!allProducts || allProducts.length === 0) return alert('No hay productos en el inventario para exportar');
-
-  try {
-    const doc = new jsPDF();
-    const today = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 28, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('AUTOSTOCK', 14, 18);
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('REPORTE GENERAL DE INVENTARIO', 196, 18, { align: 'right' });
-
-    doc.setTextColor(100, 116, 139);
-    doc.setFontSize(9);
-    doc.text(`Fecha de emisión: ${today}`, 14, 35);
-    doc.text(`Total de items: ${allProducts.length}`, 196, 35, { align: 'right' });
-
-    const tableData = allProducts.map(p => [
-      String(p.sku || 'N/A'),
-      String(p.name || p.nombre || 'Sin nombre'),
-      String(p.category || p.categoria || 'General'),
-      '$ ' + Number(p.price || p.precio || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }),
-      String(p.stock || 0) + ' u.'
-    ]);
-
-    autoTable(doc, {
-      startY: 40,
-      head: [['SKU', 'Producto', 'Categoría', 'Precio', 'Stock']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
-      bodyStyles: { textColor: [51, 65, 85], fontSize: 9 },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      columnStyles: { 3: { halign: 'right' }, 4: { halign: 'center' } }
-    });
-
-    doc.save('Reporte_Inventario_General.pdf');
-  } catch (error) {
-    console.error('Error al generar PDF:', error);
-    alert('Error al generar PDF: ' + error.message);
-  }
-};
-
+onMounted(fetchProducts);
 </script>
