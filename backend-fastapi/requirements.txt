@@ -4,7 +4,7 @@ motor
 pydantic
 pydantic-settings
 python-dotenv
-passlib[argon2]
+bcrypt
 PyJWT
 python-jose[cryptography]
 python-multipart

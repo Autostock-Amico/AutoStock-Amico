@@ -1,50 +1,75 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { hashPassword, verifyPassword } = require('../utils/hash');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_autostock';
+const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_secreta_super_segura';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+
+const DUPLICATE_USER = 'El username o email ya está en uso';
+const INVALID_CREDENTIALS = 'Credenciales inválidas';
+const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+
+const findByUsernameOrEmail = (username, email) =>
+  User.findOne({ $or: [{ username }, { email }] });
+
+const createToken = (user) =>
+  jwt.sign(
+    { sub: user._id.toString(), username: user.username, email: user.email },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+
+const validateRegister = ({ username, email, password }) => {
+  if (!username || !username.trim()) return 'El username es obligatorio';
+  if (!email || !EMAIL_REGEX.test(email)) return 'El formato del email no es válido';
+  if (!password) return 'La password es obligatoria';
+  return '';
+};
+
+const register = async (req, res) => {
+  const validationError = validateRegister(req.body);
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+
+  const username = req.body.username.trim();
+  const email = req.body.email.trim().toLowerCase();
+
+  try {
+    if (await findByUsernameOrEmail(username, email)) {
+      return res.status(400).json({ error: DUPLICATE_USER });
+    }
+    const password = await hashPassword(req.body.password);
+    const user = await User.create({ username, email, password });
+    return res.status(201).json(user);
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ error: DUPLICATE_USER });
+    }
+    return res.status(500).json({ error: 'Error interno al registrar el usuario' });
+  }
+};
 
 const login = async (req, res) => {
+  const { identifier, username, email, loginIdentifier, password } = req.body;
+  const loginKey = identifier || email || username || loginIdentifier;
+
+  if (!loginKey || !password) {
+    return res.status(400).json({ error: 'Se requiere un identificador (email o username) y contraseña' });
+  }
+
   try {
-    const { loginIdentifier, password } = req.body;
-
-    if (!loginIdentifier || !password) {
-      return res.status(400).json({ error: 'Usuario/email y contraseña requeridos' });
+    const user = await findByUsernameOrEmail(loginKey, loginKey.toLowerCase());
+    const isValid = user && (await verifyPassword(password, user.password));
+    if (!isValid) {
+      return res.status(401).json({ error: INVALID_CREDENTIALS });
     }
-
-    const user = await User.findOne({
-      $or: [{ username: loginIdentifier }, { email: loginIdentifier }]
-    });
-
-    if (!user) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    return res.status(200).json({
-      message: 'Login exitoso',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
-    });
+    return res.status(200).json({ token: createToken(user) });
   } catch (error) {
-    console.error('Error en login Express:', error);
     return res.status(500).json({ error: 'Error interno del servidor en login' });
   }
 };
 
-module.exports = { login };
+const getMe = (req, res) => res.status(200).json(req.user);
+
+module.exports = { register, login, getMe };
