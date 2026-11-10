@@ -1,106 +1,74 @@
-import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
+from typing import Optional
 
-import jwt
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from pymongo.errors import DuplicateKeyError
 
-from app.core.database import db
-from app.core.security import get_password_hash
-from app.schemas.user import UserCreate, UserResponse
 from app.api.deps import get_current_user
+from app.core.database import db
+from app.core.security import create_access_token, get_password_hash, verify_password
+from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()
-ph = PasswordHasher()
 
-SECRET_KEY = os.getenv("JWT_SECRET", "tu_clave_secreta_super_segura")
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "480"))
+DUPLICATE_USER = "El username o email ya está en uso"
+INVALID_CREDENTIALS = "Credenciales inválidas"
 
 
 class LoginSchema(BaseModel):
-    identifier: str | None = Field(default=None, description="Username o Email")
-    email: str | None = None
-    username: str | None = None
+    identifier: Optional[str] = Field(default=None, description="Username o Email")
+    email: Optional[str] = None
+    username: Optional[str] = None
     password: str
+
+    def login_key(self) -> Optional[str]:
+        return self.identifier or self.email or self.username
 
 
 class TokenResponse(BaseModel):
     token: str
 
 
+def find_by_username_or_email(username: str, email: str):
+    return db.users.find_one({"$or": [{"username": username}, {"email": email}]})
+
+
 @router.post("/register", response_model=UserResponse, status_code=201, response_model_by_alias=False)
 async def register(datos: UserCreate):
-    existente = await db.users.find_one(
-        {"$or": [{"username": datos.username}, {"email": datos.email}]}
-    )
-    if existente:
-        raise HTTPException(status_code=400, detail="El username o email ya está en uso")
+    if await find_by_username_or_email(datos.username, datos.email):
+        raise HTTPException(status_code=400, detail=DUPLICATE_USER)
 
-    ahora = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
     documento = {
         "username": datos.username,
         "email": datos.email,
         "password": get_password_hash(datos.password),
-        "createdAt": ahora,
-        "updatedAt": ahora,
+        "createdAt": now,
+        "updatedAt": now,
     }
-
     try:
         resultado = await db.users.insert_one(documento)
-        documento["_id"] = str(resultado.inserted_id)
-        return documento
     except DuplicateKeyError:
-        raise HTTPException(status_code=400, detail="El username o email ya está en uso")
+        raise HTTPException(status_code=400, detail=DUPLICATE_USER)
+
+    documento["_id"] = str(resultado.inserted_id)
+    return documento
 
 
-@router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
+@router.post("/login", response_model=TokenResponse)
 async def login(credentials: LoginSchema):
-    login_key = credentials.identifier or credentials.email or credentials.username
+    login_key = credentials.login_key()
+    if not login_key:
+        raise HTTPException(status_code=400, detail="Se requiere un identificador (email o username) y contraseña")
 
-    if not login_key or not credentials.password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Se requiere un identificador (email o username) y contraseña"
-        )
+    user = await find_by_username_or_email(login_key, login_key.lower())
+    if not user or not verify_password(credentials.password, user["password"]):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=INVALID_CREDENTIALS)
 
-    user = await db.users.find_one(
-        {"$or": [{"username": login_key}, {"email": login_key}]}
-    )
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas"
-        )
-
-    try:
-        ph.verify(user["password"], credentials.password)
-    except (VerifyMismatchError, Exception):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas"
-        )
-
-    now = datetime.now(timezone.utc)
-    expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-
-    payload = {
-        "sub": str(user["_id"]),
-        "email": user.get("email"),
-        "username": user.get("username"),
-        "iat": now,
-        "exp": expire,
-    }
-
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-
-    return {"token": token}
+    return {"token": create_access_token(user)}
 
 
-@router.get("/me", status_code=status.HTTP_200_OK)
+@router.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
