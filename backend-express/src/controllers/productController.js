@@ -1,167 +1,150 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
+
+const ENTRY_TYPES = ['ENTRY', 'ADD', 'IN'];
+const EXIT_TYPES = ['EXIT', 'SUBTRACT', 'OUT'];
+const EDITABLE_FIELDS = ['name', 'sku', 'category', 'costPrice', 'salePrice', 'currentStock', 'minStock'];
+
+const sendError = (res, status, detail) => res.status(status).json({ detail });
+
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const buildSearchQuery = ({ search, category }) => {
+  const query = {};
+  if (search && search.trim()) {
+    const searchRegex = new RegExp(escapeRegex(search.trim()), 'i');
+    query.$or = [{ name: searchRegex }, { sku: searchRegex }];
+  }
+  if (category && category.trim()) {
+    query.category = category.trim();
+  }
+  return query;
+};
+
+const pickEditableFields = (body) => {
+  const data = {};
+  EDITABLE_FIELDS.forEach((field) => {
+    if (body[field] !== undefined && body[field] !== null) data[field] = body[field];
+  });
+  if (typeof data.sku === 'string') data.sku = data.sku.trim().toUpperCase();
+  if (typeof data.name === 'string') data.name = data.name.trim();
+  if (typeof data.category === 'string') data.category = data.category.trim();
+  return data;
+};
+
+const skuInUse = (sku, excludeId) => {
+  const query = { sku };
+  if (excludeId) query._id = { $ne: excludeId };
+  return Product.exists(query);
+};
+
+const handleWriteError = (res, error, fallback) => {
+  if (error.name === 'ValidationError') {
+    const messages = Object.values(error.errors).map((e) => e.message);
+    return sendError(res, 400, messages.join('. '));
+  }
+  if (error.code === 11000) return sendError(res, 400, 'Ya existe un producto con este SKU');
+  return sendError(res, 500, fallback);
+};
 
 const getProducts = async (req, res) => {
   try {
-    const { search, category } = req.query;
-    const query = {};
-
-    if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { name: searchRegex },
-        { sku: searchRegex }
-      ];
-    }
-
-    if (category && category.trim()) {
-      query.category = category.trim();
-    }
-
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const products = await Product.find(buildSearchQuery(req.query)).sort({ createdAt: -1 });
     return res.status(200).json(products);
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno al obtener los productos' });
+    return sendError(res, 500, 'Error interno al obtener los productos');
+  }
+};
+
+const getCriticalStock = async (req, res) => {
+  try {
+    const products = await Product.find({ $expr: { $lte: ['$currentStock', '$minStock'] } });
+    return res.status(200).json(products);
+  } catch (error) {
+    return sendError(res, 500, 'Error al obtener productos con stock crítico');
   }
 };
 
 const createProduct = async (req, res) => {
+  const data = pickEditableFields(req.body);
   try {
-    const { name, sku, category, costPrice, salePrice, currentStock, minStock } = req.body;
-
-    if (!name || !sku || !category || costPrice === undefined || salePrice === undefined) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    if (data.sku && (await skuInUse(data.sku))) {
+      return sendError(res, 400, 'Ya existe un producto con este SKU');
     }
-
-    const skuClean = sku.trim();
-    const existingSku = await Product.findOne({ sku: skuClean });
-    if (existingSku) {
-      return res.status(400).json({ error: 'Ya existe un producto con este SKU' });
-    }
-
-    const product = new Product({
-      name: name.trim(),
-      sku: skuClean,
-      category: category.trim(),
-      costPrice,
-      salePrice,
-      currentStock: currentStock ?? 0,
-      minStock: minStock ?? 0,
-    });
-
-    await product.save();
+    const product = await Product.create(data);
     return res.status(201).json(product);
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno al crear el producto' });
+    return handleWriteError(res, error, 'Error interno al crear el producto');
   }
 };
 
 const updateProduct = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) return sendError(res, 400, 'ID de producto inválido');
+
+  const data = pickEditableFields(req.body);
   try {
-    const { id } = req.params;
-    const { name, sku, category, costPrice, salePrice, currentStock, minStock } = req.body;
-
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
+    if (data.sku && (await skuInUse(data.sku, id))) {
+      return sendError(res, 400, 'Ya existe un producto con este SKU');
     }
-
-    if (sku && sku.trim() !== product.sku) {
-      const skuClean = sku.trim();
-      const duplicate = await Product.findOne({ sku: skuClean, _id: { $ne: id } });
-      if (duplicate) {
-        return res.status(400).json({ error: 'El nuevo SKU ya esta registrado en otro producto' });
-      }
-      product.sku = skuClean;
-    }
-
-    if (name) product.name = name.trim();
-    if (category) product.category = category.trim();
-    if (costPrice !== undefined) product.costPrice = costPrice;
-    if (salePrice !== undefined) product.salePrice = salePrice;
-    if (currentStock !== undefined) product.currentStock = currentStock;
-    if (minStock !== undefined) product.minStock = minStock;
-
-    await product.save();
+    const product = await Product.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    if (!product) return sendError(res, 404, 'Producto no encontrado');
     return res.status(200).json(product);
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno al actualizar el producto' });
+    return handleWriteError(res, error, 'Error interno al actualizar el producto');
   }
 };
 
 const deleteProduct = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) return sendError(res, 400, 'ID de producto inválido');
+
   try {
-    const { id } = req.params;
     const product = await Product.findByIdAndDelete(id);
-
-    if (!product) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-
-    return res.status(200).json({ message: 'Producto eliminado exitosamente', id });
+    if (!product) return sendError(res, 404, 'Producto no encontrado');
+    return res.status(204).send();
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno al eliminar el producto' });
+    return sendError(res, 500, 'Error interno al eliminar el producto');
   }
+};
+
+const parseMovementType = (type) => {
+  const value = typeof type === 'string' ? type.toUpperCase() : '';
+  if (ENTRY_TYPES.includes(value)) return 'ENTRY';
+  if (EXIT_TYPES.includes(value)) return 'EXIT';
+  return null;
 };
 
 const updateStock = async (req, res) => {
+  const { id } = req.params;
+  const { quantity } = req.body;
+  const movement = parseMovementType(req.body.type);
+
+  if (!isValidId(id)) return sendError(res, 400, 'ID de producto inválido');
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    return sendError(res, 400, 'La cantidad debe ser un número entero mayor a cero');
+  }
+  if (!movement) return sendError(res, 400, 'El tipo debe ser "IN" o "OUT"');
+
+  const isEntry = movement === 'ENTRY';
+  const query = isEntry ? { _id: id } : { _id: id, currentStock: { $gte: quantity } };
+
   try {
-    const { id } = req.params;
-    const { quantity, type } = req.body;
-
-    if (!quantity || typeof quantity !== 'number' || quantity <= 0) {
-      return res.status(400).json({ error: 'La cantidad debe ser un número mayor a cero' });
-    }
-
-    const typeUpper = typeof type === 'string' ? type.toUpperCase() : '';
-    const isEntry = typeUpper === 'ENTRY' || typeUpper === 'ADD';
-    const isExit = typeUpper === 'EXIT' || typeUpper === 'SUBTRACT';
-
-    if (!isEntry && !isExit) {
-      return res.status(400).json({ error: 'El tipo debe ser "ENTRY" o "EXIT"' });
-    }
-
-    const adjustment = isEntry ? quantity : -quantity;
-    const query = { _id: id };
-
-    if (isExit) {
-      query.currentStock = { $gte: quantity };
-    }
-
-    const updatedProduct = await Product.findOneAndUpdate(
+    const updated = await Product.findOneAndUpdate(
       query,
-      { $inc: { currentStock: adjustment } },
+      { $inc: { currentStock: isEntry ? quantity : -quantity } },
       { new: true }
     );
+    if (updated) return res.status(200).json(updated);
 
-    if (!updatedProduct) {
-      const exists = await Product.findById(id);
-      if (!exists) {
-        return res.status(404).json({ error: 'Producto no encontrado' });
-      }
-      return res.status(400).json({ error: 'Stock insuficiente para realizar la operación' });
-    }
-
-    return res.status(200).json(updatedProduct);
+    const exists = await Product.exists({ _id: id });
+    return exists
+      ? sendError(res, 400, 'Stock insuficiente para realizar la operación')
+      : sendError(res, 404, 'Producto no encontrado');
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno al actualizar el stock' });
-  }
-};
-
-// GET /api/products/critical-stock
-const getCriticalStock = async (req, res) => {
-  try {
-    const criticalProducts = await Product.find({
-      $expr: {
-        $lte: ['$currentStock', '$minStock']
-      }
-    });
-
-    return res.status(200).json(criticalProducts);
-  } catch (error) {
-    return res.status(500).json({
-      error: 'Error al obtener productos con stock crítico',
-      details: error.message
-    });
+    return sendError(res, 500, 'Error interno al actualizar el stock');
   }
 };
 
