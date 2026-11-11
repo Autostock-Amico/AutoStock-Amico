@@ -1,16 +1,14 @@
-const bcrypt = require('bcryptjs');
-
-const SALT_ROUNDS = 10;
+const { hash, verify } = require('@node-rs/argon2');
 
 async function hashPassword(plainPassword) {
-  return bcrypt.hash(plainPassword, SALT_ROUNDS);
+  return hash(plainPassword);
 }
 
-async function verifyPassword(plainPassword, hash) {
+async function verifyPassword(plainPassword, hashedPassword) {
   try {
-    return await bcrypt.compare(plainPassword, hash);
+    return await verify(hashedPassword, plainPassword);
   } catch (error) {
-    // El hash guardado no es bcrypt (por ejemplo, un usuario viejo con argon2)
+    // El hash guardado no es argon2 (por ejemplo, un usuario viejo con bcrypt)
     return false;
   }
 }

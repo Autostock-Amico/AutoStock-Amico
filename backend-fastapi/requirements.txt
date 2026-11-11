@@ -4,9 +4,15 @@ motor
 pydantic
 pydantic-settings
 python-dotenv
-bcrypt
+argon2-cffi
 PyJWT
 python-jose[cryptography]
 python-multipart
 openpyxl
 reportlab
+
+# Tests
+pytest
+pytest-cov
+httpx
+mongomock-motor
