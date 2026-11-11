@@ -3,34 +3,34 @@
     <select
       :value="isAdding ? NEW_OPTION : modelValue"
       @change="handleSelect($event.target.value)"
+      class="form-control"
       required
-      style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; background: white;"
     >
       <option value="" disabled>Seleccioná una categoría</option>
       <option v-for="name in options" :key="name" :value="name">{{ name }}</option>
       <option :value="NEW_OPTION">+ Nueva categoría...</option>
     </select>
 
-    <div v-if="isAdding" style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+    <div v-if="isAdding" class="toolbar" style="margin-top: 0.5rem; flex-wrap: nowrap;">
       <input
         v-model="newName"
         type="text"
         placeholder="Nombre de la nueva categoría"
+        class="form-control"
         @keydown.enter.prevent="addCategory"
-        style="flex: 1; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;"
       />
       <button
         type="button"
         :disabled="saving"
+        class="btn btn-success"
         @click="addCategory"
-        style="padding: 0.5rem 0.8rem; background: #198754; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
       >
         {{ saving ? '...' : 'Agregar' }}
       </button>
       <button
         type="button"
+        class="btn btn-secondary"
         @click="cancelAdding"
-        style="padding: 0.5rem 0.8rem; background: #6c757d; color: #fff; border: none; border-radius: 4px; cursor: pointer;"
       >
         ✕
       </button>
@@ -61,26 +61,14 @@ const saving = ref(false);
 const error = ref('');
 
 const options = computed(() => {
-  const all = [...savedCategories.value, ...props.extraOptions, props.modelValue];
-  return [...new Set(all.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const all = [...savedCategories.value, ...props.extraOptions, props.modelValue].filter(Boolean);
+  return [...new Set(all)].sort((a, b) => a.localeCompare(b, 'es'));
 });
-
-const loadCategories = async () => {
-  try {
-    const data = await getCategories();
-    savedCategories.value = data.map(c => c.name);
-  } catch (err) {
-    error.value = getApiErrorMessage(err, 'No se pudieron cargar las categorías.');
-  }
-};
 
 const handleSelect = (value) => {
   error.value = '';
-  if (value === NEW_OPTION) {
-    isAdding.value = true;
-    return;
-  }
-  emit('update:modelValue', value);
+  if (value === NEW_OPTION) isAdding.value = true;
+  else emit('update:modelValue', value);
 };
 
 const cancelAdding = () => {
@@ -89,26 +77,12 @@ const cancelAdding = () => {
   error.value = '';
 };
 
-const findExisting = (name) => options.value.find(o => o.toLowerCase() === name.toLowerCase());
-
 const selectCategory = (name) => {
   emit('update:modelValue', name);
   cancelAdding();
 };
 
-const addCategory = async () => {
-  const name = newName.value.trim();
-  if (!name) {
-    error.value = 'Escribí el nombre de la categoría.';
-    return;
-  }
-
-  const existing = findExisting(name);
-  if (existing) {
-    selectCategory(existing);
-    return;
-  }
-
+const saveNewCategory = async (name) => {
   saving.value = true;
   try {
     const created = await createCategory(name);
@@ -121,5 +95,22 @@ const addCategory = async () => {
   }
 };
 
-onMounted(loadCategories);
+const addCategory = () => {
+  const name = newName.value.trim();
+  if (!name) {
+    error.value = 'Escribí el nombre de la categoría.';
+    return;
+  }
+  const existing = options.value.find(o => o.toLowerCase() === name.toLowerCase());
+  if (existing) selectCategory(existing);
+  else saveNewCategory(name);
+};
+
+onMounted(async () => {
+  try {
+    savedCategories.value = (await getCategories()).map(c => c.name);
+  } catch (err) {
+    error.value = getApiErrorMessage(err, 'No se pudieron cargar las categorías.');
+  }
+});
 </script>

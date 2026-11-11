@@ -44,6 +44,9 @@ export const downloadPdfReport = () => downloadReport('pdf', 'reporte_inventario
 
 export const isCritical = (product) => Number(product.currentStock) <= Number(product.minStock);
 
+export const formatMoney = (value) =>
+  Number(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 });
+
 export const getApiErrorMessage = (err, fallback) => {
   const data = err?.response?.data;
   if (typeof data?.detail === 'string') return data.detail;

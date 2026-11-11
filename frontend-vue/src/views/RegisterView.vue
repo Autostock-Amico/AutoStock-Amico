@@ -1,33 +1,33 @@
 <template>
-  <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; background-color: #f4f6f8;">
-    <form @submit.prevent="handleSubmit" style="background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 340px;">
-      <h2 style="text-align: center; margin-bottom: 1.5rem; color: #333;">AutoStock - Crear cuenta</h2>
+  <div class="auth-page">
+    <form class="auth-card" @submit.prevent="handleSubmit">
+      <h2>AutoStock - Crear cuenta</h2>
 
-      <div v-if="error" style="color: #721c24; background-color: #f8d7da; padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.9rem;">
+      <div v-if="error" class="alert alert-error">
         {{ error }}
       </div>
 
-      <div v-for="field in fields" :key="field.key" style="margin-bottom: 1rem;">
-        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">{{ field.label }}</label>
+      <div v-for="field in fields" :key="field.key" class="field">
+        <label class="form-label">{{ field.label }}</label>
         <input
           :type="field.type"
           v-model="form[field.key]"
           required
-          style="width: 100%; padding: 0.5rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"
+          class="form-control"
         />
       </div>
 
       <button
         type="submit"
         :disabled="loading"
-        style="width: 100%; padding: 0.6rem; margin-top: 0.5rem; background-color: #0d6efd; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
+        class="btn btn-block btn-primary"
       >
         {{ loading ? 'Creando cuenta...' : 'Crear cuenta' }}
       </button>
 
-      <p style="text-align: center; margin: 1rem 0 0; font-size: 0.9rem; color: #555;">
+      <p class="auth-footer">
         ¿Ya tenés cuenta?
-        <router-link to="/login" style="color: #0d6efd; font-weight: bold;">Iniciar sesión</router-link>
+        <router-link to="/login">Iniciar sesión</router-link>
       </p>
     </form>
   </div>

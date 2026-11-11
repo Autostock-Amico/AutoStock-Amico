@@ -1,77 +1,38 @@
 <template>
-  <div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  <div class="table-wrapper">
+    <table class="table">
       <thead>
-        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; text-align: left;">
-          <th style="padding: 12px;">SKU</th>
-          <th style="padding: 12px;">Nombre</th>
-          <th style="padding: 12px;">Categoría</th>
-          <th style="padding: 12px;">Precio Venta</th>
-          <th style="padding: 12px;">Stock Actual</th>
-          <th style="padding: 12px; text-align: center;">Acciones</th>
+        <tr>
+          <th>SKU</th>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Precio Venta</th>
+          <th>Stock Actual</th>
+          <th class="center">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="products.length === 0">
-          <td colspan="6" style="text-align: center; padding: 20px; color: #6c757d;">
-            No se encontraron productos en la lista.
-          </td>
+          <td colspan="6" class="center" style="color: #6c757d;">No se encontraron productos en la lista.</td>
         </tr>
-        <tr
-          v-for="product in products"
-          :key="product.id"
-          :style="{
-            borderBottom: '1px solid #e9ecef',
-            backgroundColor: isCritical(product) ? '#fff5f5' : 'transparent'
-          }"
-        >
-          <td style="padding: 12px; font-weight: bold; color: #495057;">{{ product.sku }}</td>
-          <td style="padding: 12px;">
+        <tr v-for="product in products" :key="product.id" :class="{ 'row-critical': isCritical(product) }">
+          <td><strong>{{ product.sku }}</strong></td>
+          <td>
             {{ product.name }}
-            <span v-if="isCritical(product)" style="margin-left: 8px; background: #dc3545; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
-              CRÍTICO
-            </span>
+            <span v-if="isCritical(product)" class="badge badge-danger" style="margin-left: 8px; font-size: 0.7rem;">CRÍTICO</span>
           </td>
-          <td style="padding: 12px;">
-            <span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">
-              {{ product.category || 'Sin Categoría' }}
-            </span>
-          </td>
-          <td style="padding: 12px; color: #28a745; font-weight: bold;">
-            ${{ Number(product.salePrice || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }) }}
-          </td>
-          <td style="padding: 12px;">
-            <span :style="{
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '0.85rem',
-              color: '#fff',
-              backgroundColor: isCritical(product) ? '#dc3545' : '#198754'
-            }">
+          <td><span class="badge badge-muted">{{ product.category || 'Sin Categoría' }}</span></td>
+          <td style="color: #28a745; font-weight: bold;">${{ formatMoney(product.salePrice) }}</td>
+          <td>
+            <span class="badge" :class="isCritical(product) ? 'badge-danger' : 'badge-success'">
               {{ product.currentStock }} u. <small style="opacity: 0.8;">(mín. {{ product.minStock }})</small>
             </span>
           </td>
-          <td style="padding: 12px; text-align: center;">
-            <div style="display: flex; gap: 0.4rem; justify-content: center;">
-              <button
-                @click="$emit('adjust-stock', product)"
-                style="padding: 0.3rem 0.6rem; background: #0d6efd; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
-              >
-                Stock
-              </button>
-              <button
-                @click="$emit('edit', product)"
-                style="padding: 0.3rem 0.6rem; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
-              >
-                Editar
-              </button>
-              <button
-                @click="$emit('delete', product)"
-                style="padding: 0.3rem 0.6rem; background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;"
-              >
-                Eliminar
-              </button>
+          <td class="center">
+            <div class="toolbar" style="justify-content: center;">
+              <button class="btn btn-primary btn-sm" @click="$emit('adjust-stock', product)">Stock</button>
+              <button class="btn btn-warning btn-sm" @click="$emit('edit', product)">Editar</button>
+              <button class="btn btn-danger btn-sm" @click="$emit('delete', product)">Eliminar</button>
             </div>
           </td>
         </tr>
@@ -81,13 +42,10 @@
 </template>
 
 <script setup>
-import { isCritical } from '../services/productService';
+import { isCritical, formatMoney } from '../services/productService';
 
 defineProps({
-  products: {
-    type: Array,
-    required: true
-  }
+  products: { type: Array, required: true }
 });
 
 defineEmits(['edit', 'adjust-stock', 'delete']);
