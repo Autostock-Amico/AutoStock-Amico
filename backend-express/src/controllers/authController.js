@@ -29,7 +29,7 @@ const validateRegister = ({ username, email, password }) => {
 const register = async (req, res) => {
   const validationError = validateRegister(req.body);
   if (validationError) {
-    return res.status(400).json({ error: validationError });
+    return res.status(400).json({ detail: validationError });
   }
 
   const username = req.body.username.trim();
@@ -37,16 +37,16 @@ const register = async (req, res) => {
 
   try {
     if (await findByUsernameOrEmail(username, email)) {
-      return res.status(400).json({ error: DUPLICATE_USER });
+      return res.status(400).json({ detail: DUPLICATE_USER });
     }
     const password = await hashPassword(req.body.password);
     const user = await User.create({ username, email, password });
     return res.status(201).json(user);
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ error: DUPLICATE_USER });
+      return res.status(400).json({ detail: DUPLICATE_USER });
     }
-    return res.status(500).json({ error: 'Error interno al registrar el usuario' });
+    return res.status(500).json({ detail: 'Error interno al registrar el usuario' });
   }
 };
 
@@ -55,18 +55,18 @@ const login = async (req, res) => {
   const loginKey = identifier || email || username || loginIdentifier;
 
   if (!loginKey || !password) {
-    return res.status(400).json({ error: 'Se requiere un identificador (email o username) y contraseña' });
+    return res.status(400).json({ detail: 'Se requiere un identificador (email o username) y contraseña' });
   }
 
   try {
     const user = await findByUsernameOrEmail(loginKey, loginKey.toLowerCase());
     const isValid = user && (await verifyPassword(password, user.password));
     if (!isValid) {
-      return res.status(401).json({ error: INVALID_CREDENTIALS });
+      return res.status(401).json({ detail: INVALID_CREDENTIALS });
     }
     return res.status(200).json({ token: createToken(user) });
   } catch (error) {
-    return res.status(500).json({ error: 'Error interno del servidor en login' });
+    return res.status(500).json({ detail: 'Error interno del servidor en login' });
   }
 };
 

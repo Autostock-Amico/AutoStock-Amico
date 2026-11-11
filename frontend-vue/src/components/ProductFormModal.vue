@@ -38,13 +38,7 @@
 
         <div style="margin-bottom: 1rem;">
           <label style="display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 0.3rem;">Categoría *</label>
-          <input
-            v-model="form.category"
-            type="text"
-            required
-            placeholder="Ej: Filtros, Lubricantes, Frenos"
-            style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;"
-          />
+          <CategorySelect v-model="form.category" :extra-options="categories" />
         </div>
 
         <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
@@ -121,10 +115,12 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { createProduct, updateProduct, getApiErrorMessage } from '../services/productService';
+import CategorySelect from './CategorySelect.vue';
 
 const props = defineProps({
   isOpen: Boolean,
-  productToEdit: Object
+  productToEdit: Object,
+  categories: { type: Array, default: () => [] }
 });
 
 const emit = defineEmits(['close', 'saved']);

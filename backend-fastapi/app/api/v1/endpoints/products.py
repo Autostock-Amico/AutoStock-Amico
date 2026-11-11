@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
@@ -44,7 +45,7 @@ def parse_object_id(product_id: str) -> ObjectId:
 def build_search_query(search: Optional[str], category: Optional[str]) -> dict:
     query = {}
     if search and search.strip():
-        search_regex = {"$regex": search.strip(), "$options": "i"}
+        search_regex = {"$regex": re.escape(search.strip()), "$options": "i"}
         query["$or"] = [{"name": search_regex}, {"sku": search_regex}]
     if category and category.strip():
         query["category"] = category.strip()

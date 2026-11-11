@@ -1,19 +1,22 @@
 const jwt = require('jsonwebtoken');
 
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+function getBearerToken(header) {
+  if (!header) return null;
+  const [scheme, token] = header.trim().split(/\s+/);
+  return scheme === 'Bearer' && token ? token : null;
+}
 
+function authenticateToken(req, res, next) {
+  const token = getBearerToken(req.headers.authorization);
   if (!token) {
-    return res.status(401).json({ error: 'Acceso denegado: Token no proporcionado' });
+    return res.status(401).json({ detail: 'Token no proporcionado, inválido o expirado' });
   }
 
   try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
-    next();
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    return next();
   } catch (error) {
-    return res.status(401).json({ error: 'Token inválido o expirado' });
+    return res.status(401).json({ detail: 'Token no proporcionado, inválido o expirado' });
   }
 }
 

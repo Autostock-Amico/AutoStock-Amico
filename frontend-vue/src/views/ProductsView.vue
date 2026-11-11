@@ -63,6 +63,7 @@
     <ProductFormModal
       :isOpen="isModalOpen"
       :productToEdit="editingProduct"
+      :categories="categories"
       @close="isModalOpen = false"
       @saved="handleProductSaved"
     />
