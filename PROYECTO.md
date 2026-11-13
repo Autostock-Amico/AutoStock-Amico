@@ -33,7 +33,7 @@ Identificación y Alertas de Stock Crítico: Mecanismo automático que compara e
 Generación y Descarga de Planillas Excel: Funcionalidad para procesar la lista de productos (completa o filtrada) y descargar un archivo estructurado en formato .xlsx.
 Emisión de Informes de Inventario en PDF: Módulo para generar un documento impreso o descargable en formato .pdf con el estado del inventario, métricas de valorización total (costo vs. venta) y la lista de reposición urgente.
 Alcances No Funcionales
-Encriptación y Control de Accesos: Hasheado obligatorio de contraseñas utilizando el algoritmo bcrypt en la base de datos y validación de tokens JWT en las cabeceras HTTP de la API.
+Encriptación y Control de Accesos: Hasheado obligatorio de contraseñas utilizando el algoritmo argon2 (variante argon2id) en la base de datos y validación de tokens JWT en las cabeceras HTTP de la API.
 Contenedorización de MongoDB con Volúmenes: Despliegue de la base de datos mediante Docker Compose, configurando volúmenes de datos montados en el host para garantizar la persistencia tras reinicios o caídas del contenedor.
 Latencia de Endpoints REST: Los endpoints de la API para operaciones CRUD estándar deben responder con un tiempo de latencia inferior a 200 milisegundos bajo carga de trabajo normal.
 Interfaz Adaptable y Tiempos de Respuesta Visual: Diseño adaptable (Responsive) orientado a paneles de administración desktop/tablet, ofreciendo feedback visual inmediato (notificaciones, confirmaciones y spinners de carga) en menos de 100 milisegundos.

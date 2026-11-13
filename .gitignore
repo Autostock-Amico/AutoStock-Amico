@@ -23,3 +23,5 @@ dist/
 # Tests (el reporte coverage.xml SI se sube como evidencia de cobertura)
 .pytest_cache/
 .coverage
+
+coverage.xml
