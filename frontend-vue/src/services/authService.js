@@ -15,3 +15,16 @@ export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 };
+
+
+// Lee el nombre de usuario guardado dentro del token (JWT)
+export const getCurrentUsername = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return '';
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.username || '';
+  } catch (error) {
+    return '';
+  }
+};

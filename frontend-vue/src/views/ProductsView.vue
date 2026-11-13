@@ -3,9 +3,7 @@
     <ProductsToolbar
       @export-excel="runExport(downloadExcelReport)"
       @export-pdf="runExport(downloadPdfReport)"
-      @critical-stock="router.push('/critical-stock')"
       @create="openProductModal(null)"
-      @logout="handleLogout"
     />
 
     <ProductFilters v-model:search="searchQuery" v-model:category="selectedCategory" :categories="categories" />
@@ -40,17 +38,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import ProductsToolbar from '../components/ProductsToolbar.vue';
 import ProductFilters from '../components/ProductFilters.vue';
 import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
 import StockAdjustmentModal from '../components/StockAdjustmentModal.vue';
 import { useProducts } from '../composables/useProducts';
-import { logout } from '../services/authService';
 import { downloadExcelReport, downloadPdfReport } from '../services/productService';
 
-const router = useRouter();
 const {
   searchQuery, selectedCategory, loading, errorMessage, categories, filteredProducts,
   fetchProducts, upsertProduct, removeProduct, runExport
@@ -73,11 +68,6 @@ const openStockModal = (product) => {
 
 const handleDelete = (product) => {
   if (window.confirm(`¿Eliminar el producto ${product.sku} - ${product.name}?`)) removeProduct(product);
-};
-
-const handleLogout = () => {
-  logout();
-  router.push('/login');
 };
 
 onMounted(fetchProducts);

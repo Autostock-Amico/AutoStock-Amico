@@ -1,16 +1,12 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import App from './App.vue';
 import router from './router';
 import './styles.css';
 
-const app = createApp({
-  template: '<router-view></router-view>'
-});
+const app = createApp(App);
 
-const pinia = createPinia();
-app.use(pinia);
-
-// Inicializar router después de Pinia
+app.use(createPinia());
 app.use(router);
 
 app.mount('#app');
