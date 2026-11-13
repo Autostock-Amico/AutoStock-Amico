@@ -1,8 +1,7 @@
 <template>
   <div class="page">
     <div style="margin-bottom: 1.5rem;">
-      <button class="btn btn-link" style="margin-bottom: 0.5rem;" @click="router.push('/dashboard')">← Volver al catálogo</button>
-      <h1 class="page-title" style="color: #dc3545;">Productos en Stock Crítico</h1>
+      <h1 class="page-title">⚠️ Productos en Stock Crítico</h1>
       <p class="page-subtitle">Artículos con stock actual menor o igual a su stock mínimo.</p>
     </div>
 
@@ -41,10 +40,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { getCriticalStock, getApiErrorMessage, formatMoney } from '../services/productService';
 
-const router = useRouter();
 const criticalProducts = ref([]);
 const loading = ref(true);
 const errorMessage = ref('');

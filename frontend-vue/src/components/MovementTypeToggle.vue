@@ -21,16 +21,16 @@ const props = defineProps({
 defineEmits(['update:modelValue']);
 
 const OPTIONS = [
-  { value: 'IN', label: '+ Entrada (Ingreso)', color: '#198754' },
-  { value: 'OUT', label: '- Salida (Egreso)', color: '#dc3545' }
+  { value: 'IN', label: '+ Entrada (Ingreso)', color: '#22c55e' },
+  { value: 'OUT', label: '- Salida (Egreso)', color: '#ef4444' }
 ];
 
 const buttonStyle = (option) => {
   const active = props.modelValue === option.value;
   return {
     border: `1px solid ${option.color}`,
-    backgroundColor: active ? option.color : '#fff',
-    color: active ? '#fff' : option.color
+    backgroundColor: active ? option.color : 'transparent',
+    color: active ? '#0f1115' : option.color
   };
 };
 </script>
