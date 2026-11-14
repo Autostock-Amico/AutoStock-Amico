@@ -53,7 +53,7 @@ export function useProducts() {
   };
 
   return {
-    searchQuery, selectedCategory, loading, errorMessage, categories, filteredProducts,
+    products, searchQuery, selectedCategory, loading, errorMessage, categories, filteredProducts,
     fetchProducts, upsertProduct, removeProduct, runExport
   };
 }
