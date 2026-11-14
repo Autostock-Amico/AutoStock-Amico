@@ -1,55 +1,28 @@
 <template>
-  <div class="auth-page">
-    <form class="auth-card" @submit.prevent="handleSubmit">
-      <h2>AutoStock - Login</h2>
+  <AuthLayout title="Bienvenido a AutoStock" subtitle="Ingresá para gestionar tu inventario">
+    <form @submit.prevent="handleSubmit">
+      <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
+      <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-      <div v-if="successMessage" class="alert alert-success">
-        {{ successMessage }}
-      </div>
+      <IconInput v-model="credentials.identifier" label="Usuario o email" icon="👤" placeholder="santi o santi@mail.com" autocomplete="username" />
+      <IconInput v-model="credentials.password" label="Contraseña" icon="🔒" type="password" placeholder="Tu contraseña" autocomplete="current-password" />
 
-      <div v-if="error" class="alert alert-error">
-        {{ error }}
-      </div>
-
-      <div class="field">
-        <label class="form-label">Usuario o email</label>
-        <input
-          type="text"
-          v-model="credentials.identifier"
-          required
-          class="form-control"
-        />
-      </div>
-
-      <div class="field">
-        <label class="form-label">Contraseña</label>
-        <input
-          type="password"
-          v-model="credentials.password"
-          required
-          class="form-control"
-        />
-      </div>
-
-      <button
-        type="submit"
-        :disabled="loading"
-        class="btn btn-block btn-success"
-      >
-        {{ loading ? 'Cargando...' : 'Iniciar Sesión' }}
+      <button type="submit" class="btn btn-primary btn-block auth-submit" :disabled="loading">
+        {{ loading ? 'Ingresando...' : 'Iniciar sesión' }}
       </button>
 
       <p class="auth-footer">
-        ¿No tenés cuenta?
-        <router-link to="/register">Crear cuenta</router-link>
+        ¿No tenés cuenta? <router-link to="/register">Crear cuenta</router-link>
       </p>
     </form>
-  </div>
+  </AuthLayout>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import AuthLayout from '../components/AuthLayout.vue';
+import IconInput from '../components/IconInput.vue';
 import { login } from '../services/authService';
 import { getApiErrorMessage } from '../services/productService';
 
@@ -71,7 +44,7 @@ const handleSubmit = async () => {
   } catch (err) {
     error.value = err.response
       ? getApiErrorMessage(err, 'Credenciales inválidas.')
-      : 'Error al conectar con el servidor. Inténtalo nuevamente.';
+      : 'No se pudo conectar con el servidor. Verificá que el backend esté encendido.';
   } finally {
     loading.value = false;
   }
