@@ -6,10 +6,12 @@
       @create="openProductModal(null)"
     />
 
+    <InventoryStats v-if="!loading" :products="products" />
+
     <ProductFilters v-model:search="searchQuery" v-model:category="selectedCategory" :categories="categories" />
 
     <div v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-    <div v-if="loading" class="loading">Cargando catálogo...</div>
+    <div v-if="loading" class="loading"><div class="spinner"></div>Cargando catálogo...</div>
 
     <ProductTable
       v-else
@@ -39,6 +41,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import ProductsToolbar from '../components/ProductsToolbar.vue';
+import InventoryStats from '../components/InventoryStats.vue';
 import ProductFilters from '../components/ProductFilters.vue';
 import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
@@ -47,7 +50,7 @@ import { useProducts } from '../composables/useProducts';
 import { downloadExcelReport, downloadPdfReport } from '../services/productService';
 
 const {
-  searchQuery, selectedCategory, loading, errorMessage, categories, filteredProducts,
+  products, searchQuery, selectedCategory, loading, errorMessage, categories, filteredProducts,
   fetchProducts, upsertProduct, removeProduct, runExport
 } = useProducts();
 

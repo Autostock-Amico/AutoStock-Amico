@@ -1,38 +1,42 @@
 <template>
   <div class="table-wrapper">
-    <table class="table">
+    <div v-if="products.length === 0" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div>No se encontraron productos.</div>
+      <small>Probá con otra búsqueda o creá un producto nuevo.</small>
+    </div>
+
+    <table v-else class="table">
       <thead>
         <tr>
           <th>SKU</th>
-          <th>Nombre</th>
+          <th>Producto</th>
           <th>Categoría</th>
-          <th>Precio Venta</th>
-          <th>Stock Actual</th>
+          <th class="right">Precio venta</th>
+          <th>Stock</th>
           <th class="center">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="products.length === 0">
-          <td colspan="6" class="center" style="color: var(--text-muted); padding: 2rem;">No se encontraron productos en la lista.</td>
-        </tr>
         <tr v-for="product in products" :key="product.id" :class="{ 'row-critical': isCritical(product) }">
-          <td><strong>{{ product.sku }}</strong></td>
+          <td><span class="sku">{{ product.sku }}</span></td>
           <td>
             {{ product.name }}
-            <span v-if="isCritical(product)" class="badge badge-danger" style="margin-left: 8px; font-size: 0.7rem;">CRÍTICO</span>
+            <span v-if="isCritical(product)" class="badge badge-danger" style="margin-left: 6px;">Crítico</span>
           </td>
-          <td><span class="badge badge-muted">{{ product.category || 'Sin Categoría' }}</span></td>
-          <td class="text-money">${{ formatMoney(product.salePrice) }}</td>
+          <td><span class="badge badge-muted">{{ product.category || 'Sin categoría' }}</span></td>
+          <td class="right text-money">${{ formatMoney(product.salePrice) }}</td>
           <td>
-            <span class="badge" :class="isCritical(product) ? 'badge-danger' : 'badge-success'">
-              {{ product.currentStock }} u. <small style="opacity: 0.8;">(mín. {{ product.minStock }})</small>
-            </span>
+            <div class="stock-cell">
+              <span class="badge" :class="isCritical(product) ? 'badge-danger' : 'badge-success'">{{ product.currentStock }} u.</span>
+              <small>mín. {{ product.minStock }}</small>
+            </div>
           </td>
           <td class="center">
             <div class="toolbar" style="justify-content: center;">
-              <button class="btn btn-info btn-sm" @click="$emit('adjust-stock', product)">Stock</button>
-              <button class="btn btn-warning btn-sm" @click="$emit('edit', product)">Editar</button>
-              <button class="btn btn-danger btn-sm" @click="$emit('delete', product)">Eliminar</button>
+              <button class="btn btn-info btn-sm" title="Ajustar stock" @click="$emit('adjust-stock', product)">± Stock</button>
+              <button class="btn btn-warning btn-sm icon-btn" title="Editar" @click="$emit('edit', product)">✏️</button>
+              <button class="btn btn-danger btn-sm icon-btn" title="Eliminar" @click="$emit('delete', product)">🗑️</button>
             </div>
           </td>
         </tr>
