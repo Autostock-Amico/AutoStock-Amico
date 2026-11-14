@@ -3,18 +3,18 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-13.
+> Generado: 2026-11-14.
 
 ## 1. Veredicto
 
 | Aspecto | Resultado |
 |---|---|
 | Tipo de proyecto | app |
-| Índice de calidad de servicios | **95/100** (mínimo 50) |
-| Criterios cumplidos | **15/16** |
+| Índice de calidad de servicios | **100/100** (mínimo 50) |
+| Criterios cumplidos | **16/16** |
 | Aprobado (semáforo) | **SI** |
-| Código (LOC) | 2,353 |
-| Archivos de código | 58 |
+| Código (LOC) | 2,408 |
+| Archivos de código | 62 |
 | Tests (archivos) | 7 |
 | Cobertura de líneas | 99.2% (mínimo 80%) |
 | Capas detectadas | presentacion, logica, datos, vistas, servicios, estado |
@@ -30,7 +30,7 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| amico12345 | 34 | 2,839 | 313 | 67 | 18 | 100% |
+| amico12345 | 37 | 2,978 | 313 | 67 | 19 | 100% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
 
@@ -40,7 +40,7 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| amico12345 | 16 | 61% | 26 d | 86% | **52** | Aprueba | Cumplimiento 61% (mín. 100%); Pausa 26 d (máx. 5 d) |
+| amico12345 | 17 | 65% | 26 d | 100% | **56** | Aprueba | Cumplimiento 65% (mín. 100%); Pausa 26 d (máx. 5 d) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -52,13 +52,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Un resumen numérico (0-100) que combina todas las señales y métricas del análisis, con topes duros por duplicación.
 - **Por qué importa:** Ordena y prioriza la revisión: un índice bajo indica varias señales que conviene mirar juntas.
-- **Tu resultado:** índice **95/100** _(mínimo 50)_
+- **Tu resultado:** índice **100/100** _(mínimo 50)_
 
 ### 2. Duplicación (DRY) (duplicacion) — OK
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **4.2%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **4.1%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — OK
 
@@ -84,15 +84,11 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 - **Por qué importa:** Duplica la lógica de acceso a datos y acopla la vista al backend: un cambio de API toca muchos componentes.
 - **Tu resultado:** **0** llamada(s) a la API dentro de componente(s) _(máximo 0)_
 
-### 7. Depuración olvidada (DBG) — A REVISAR
+### 7. Depuración olvidada (DBG) — OK
 
 - **Qué mide:** Mensajes de depuración olvidados (`console.log`, `print`, `debugger`).
 - **Por qué importa:** Generan ruido en los registros, pueden filtrar datos y dan sensación de código sin terminar.
-- **Tu resultado:** **1** mensaje(s) de depuración olvidado(s) _(máximo 0)_
-- **Para investigar la causa:**
-    - ¿Fue depuración que quedó al cerrar una tarea, o se usó como registro permanente?
-    - ¿Hubo una revisión final antes de cerrar la issue o la entrega?
-    - ¿Quién agregó cada mensaje y con qué objetivo?
+- **Tu resultado:** **0** mensaje(s) de depuración olvidado(s) _(máximo 0)_
 
 ### 8. Uso del tipo `any` (Any) — OK
 
@@ -116,7 +112,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **1** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 2353 LOC))_
+- **Tu resultado:** **1** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 2408 LOC))_
 
 ### 12. Funciones/métodos largos o con muchos parámetros (Tam) — OK
 
@@ -147,15 +143,11 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Cantidad de vistas/componentes de pantalla del frontend.
 - **Por qué importa:** El frontend se mide por pantallas: pocas vistas sugiere poca cobertura de la interfaz pedida.
-- **Tu resultado:** **18** vista(s)/componente(s) _(mínimo 6)_
+- **Tu resultado:** **22** vista(s)/componente(s) _(mínimo 6)_
 
 ## 5. Observaciones y qué falta
 
-**Aprobado con observaciones.** Estos criterios quedan en rojo (se permiten hasta **3** sin que sean compuertas críticas), así que no bloquean la aprobación pero conviene corregirlos:
-
-| Criterio | Resultado actual | Meta | Brecha | Cómo alcanzarlo |
-|---|---|---|---|---|
-| Depuración olvidada (DBG) | **1** mensaje(s) de depuración olvidado(s) | máximo 0 | 1 caso(s) a eliminar | Borrá `console.log`/`print`/`debugger` del código de producción. Si necesitás registro, usá el logger del proyecto con el nivel adecuado. Meta: 0 casos. |
+_Cumple **todos** los criterios del semáforo: no hay nada que arreglar para aprobar. El siguiente objetivo es sostenerlo y mejorar duplicación y diseño._
 
 ## 6. Actividad en clase y fuera de clase
 
@@ -163,7 +155,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 ### amico12345
 
-**14/27 clases con actividad** · total del período: 32 commits · 23 merges
+**15/27 clases con actividad** · total del período: 36 commits · 27 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -193,7 +185,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 | 2026-11-04 | No | sin actividad | 0 / 0 |
 | 2026-11-06 | **Sí** | AutoStock-Amico | 2 / 1 |
 | 2026-11-11 | **Sí** | AutoStock-Amico | 3 / 3 |
-| 2026-11-13 | No | sin actividad | 0 / 0 |
+| 2026-11-13 | **Sí** | AutoStock-Amico | 4 / 4 |
 
 **Fuera de clase:** 4 fecha(s) con actividad · 6 commits · 5 merges
 
@@ -206,10 +198,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 ## 7. Anexo: dónde mirar
 
-Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
-
-**Depuración olvidada (DBG)** — 1 archivo(s):
-- `backend-express/index.js`
+_No hay criterios en rojo con archivos asociados._
 
 ---
 _Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo señalado y el criterio en `CRITERIOS-CALIDAD.md`._
