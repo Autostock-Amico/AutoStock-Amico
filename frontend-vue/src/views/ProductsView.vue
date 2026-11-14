@@ -1,8 +1,8 @@
 <template>
   <div class="page">
     <ProductsToolbar
-      @export-excel="runExport(downloadExcelReport)"
-      @export-pdf="runExport(downloadPdfReport)"
+      @export-excel="runExport(downloadExcelReport, 'Excel')"
+      @export-pdf="runExport(downloadPdfReport, 'PDF')"
       @create="openProductModal(null)"
     />
 
@@ -26,14 +26,14 @@
       :productToEdit="editingProduct"
       :categories="categories"
       @close="isModalOpen = false"
-      @saved="upsertProduct"
+      @saved="handleSaved"
     />
 
     <StockAdjustmentModal
       :isOpen="isStockModalOpen"
       :product="stockProduct"
       @close="isStockModalOpen = false"
-      @adjusted="upsertProduct"
+      @adjusted="handleStockAdjusted"
     />
   </div>
 </template>
@@ -47,12 +47,14 @@ import ProductTable from '../components/ProductTable.vue';
 import ProductFormModal from '../components/ProductFormModal.vue';
 import StockAdjustmentModal from '../components/StockAdjustmentModal.vue';
 import { useProducts } from '../composables/useProducts';
+import { useToast } from '../composables/useToast';
 import { downloadExcelReport, downloadPdfReport } from '../services/productService';
 
 const {
   products, searchQuery, selectedCategory, loading, errorMessage, categories, filteredProducts,
   fetchProducts, upsertProduct, removeProduct, runExport
 } = useProducts();
+const toast = useToast();
 
 const isModalOpen = ref(false);
 const editingProduct = ref(null);
@@ -67,6 +69,16 @@ const openProductModal = (product) => {
 const openStockModal = (product) => {
   stockProduct.value = product;
   isStockModalOpen.value = true;
+};
+
+const handleSaved = (product) => {
+  const wasEdited = upsertProduct(product);
+  toast.success(wasEdited ? `Producto ${product.sku} actualizado` : `Producto ${product.sku} creado`);
+};
+
+const handleStockAdjusted = (product) => {
+  upsertProduct(product);
+  toast.success(`Stock de ${product.sku} actualizado: ${product.currentStock} u.`);
 };
 
 const handleDelete = (product) => {

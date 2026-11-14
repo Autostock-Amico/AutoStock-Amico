@@ -1,8 +1,10 @@
 import { ref, computed } from 'vue';
 import { getProducts, deleteProduct, getApiErrorMessage } from '../services/productService';
+import { useToast } from './useToast';
 
 // Estado y operaciones del catálogo de productos
 export function useProducts() {
+  const toast = useToast();
   const products = ref([]);
   const searchQuery = ref('');
   const selectedCategory = ref('');
@@ -33,22 +35,25 @@ export function useProducts() {
   const upsertProduct = (saved) => {
     const exists = products.value.some(p => p.id === saved.id);
     products.value = exists ? products.value.map(p => (p.id === saved.id ? saved : p)) : [saved, ...products.value];
+    return exists;
   };
 
   const removeProduct = async (product) => {
     try {
       await deleteProduct(product.id);
       products.value = products.value.filter(p => p.id !== product.id);
+      toast.success(`Producto ${product.sku} eliminado`);
     } catch (err) {
-      errorMessage.value = getApiErrorMessage(err, 'No se pudo eliminar el producto.');
+      toast.error(getApiErrorMessage(err, 'No se pudo eliminar el producto.'));
     }
   };
 
-  const runExport = async (exportFn) => {
+  const runExport = async (exportFn, label) => {
     try {
       await exportFn();
+      toast.success(`Reporte ${label} descargado`);
     } catch (err) {
-      errorMessage.value = getApiErrorMessage(err, 'No se pudo generar el reporte.');
+      toast.error(getApiErrorMessage(err, 'No se pudo generar el reporte.'));
     }
   };
 
