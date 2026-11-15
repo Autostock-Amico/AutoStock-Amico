@@ -53,3 +53,7 @@ export const getApiErrorMessage = (err, fallback) => {
   if (Array.isArray(data?.detail)) return data.detail.map((d) => d.msg).join('. ');
   return data?.error || data?.message || fallback;
 };
+
+
+export const missingUnits = (product) =>
+  Math.max(Number(product.minStock || 0) - Number(product.currentStock || 0), 0);
