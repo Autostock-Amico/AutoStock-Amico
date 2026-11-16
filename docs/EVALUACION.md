@@ -3,7 +3,7 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-14.
+> Generado: 2026-11-16.
 
 ## 1. Veredicto
 
@@ -13,10 +13,10 @@
 | Índice de calidad de servicios | **100/100** (mínimo 50) |
 | Criterios cumplidos | **16/16** |
 | Aprobado (semáforo) | **SI** |
-| Código (LOC) | 2,408 |
-| Archivos de código | 62 |
+| Código (LOC) | 2,797 |
+| Archivos de código | 67 |
 | Tests (archivos) | 7 |
-| Cobertura de líneas | 99.2% (mínimo 80%) |
+| Cobertura de líneas | 99.3% (mínimo 80%) |
 | Capas detectadas | presentacion, logica, datos, vistas, servicios, estado |
 | Pushes directos a `main` (sin PR) | 1 |
 
@@ -30,7 +30,7 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| amico12345 | 37 | 2,978 | 313 | 67 | 19 | 100% |
+| amico12345 | 41 | 3,476 | 313 | 67 | 21 | 100% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
 
@@ -40,7 +40,7 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| amico12345 | 17 | 65% | 26 d | 100% | **56** | Aprueba | Cumplimiento 65% (mín. 100%); Pausa 26 d (máx. 5 d) |
+| amico12345 | 19 | 70% | 26 d | 93% | **59** | Aprueba | Cumplimiento 70% (mín. 100%); Pausa 26 d (máx. 5 d) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -58,7 +58,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **4.1%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **3.5%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — OK
 
@@ -112,13 +112,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **1** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 2408 LOC))_
+- **Tu resultado:** **1** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 2797 LOC))_
 
 ### 12. Funciones/métodos largos o con muchos parámetros (Tam) — OK
 
 - **Qué mide:** Tamaño de las funciones/métodos y cantidad de parámetros.
 - **Por qué importa:** Una función que hace varias cosas cuesta leerla, nombrarla y reutilizarla.
-- **Tu resultado:** **2** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
+- **Tu resultado:** **1** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
 
 ### 13. Acoplamiento alto (Acop) — OK
 
@@ -130,7 +130,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de líneas de código ejecutadas por la suite de tests (cobertura real, no cantidad de archivos de test).
 - **Por qué importa:** Un test que existe pero no ejecuta el código no protege de nada: la cobertura muestra qué partes quedan sin verificar.
-- **Tu resultado:** **99.2%** de líneas cubiertas · fuente: ejecución: pytest _(mínimo 80% de líneas)_
+- **Tu resultado:** **99.3%** de líneas cubiertas · fuente: ejecución: pytest _(mínimo 80% de líneas)_
 - **Qué no se consideró:** el informe de cobertura publicado en el repositorio no se aceptó (coverage.xml: no declara líneas por archivo).
 
 ### 15. Endpoints del backend (EP) — OK
@@ -143,7 +143,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Cantidad de vistas/componentes de pantalla del frontend.
 - **Por qué importa:** El frontend se mide por pantallas: pocas vistas sugiere poca cobertura de la interfaz pedida.
-- **Tu resultado:** **22** vista(s)/componente(s) _(mínimo 6)_
+- **Tu resultado:** **26** vista(s)/componente(s) _(mínimo 6)_
 
 ## 5. Observaciones y qué falta
 
@@ -155,7 +155,7 @@ _Cumple **todos** los criterios del semáforo: no hay nada que arreglar para apr
 
 ### amico12345
 
-**15/27 clases con actividad** · total del período: 36 commits · 27 merges
+**15/27 clases con actividad** · total del período: 36 commits · 26 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -185,9 +185,9 @@ _Cumple **todos** los criterios del semáforo: no hay nada que arreglar para apr
 | 2026-11-04 | No | sin actividad | 0 / 0 |
 | 2026-11-06 | **Sí** | AutoStock-Amico | 2 / 1 |
 | 2026-11-11 | **Sí** | AutoStock-Amico | 3 / 3 |
-| 2026-11-13 | **Sí** | AutoStock-Amico | 4 / 4 |
+| 2026-11-13 | **Sí** | AutoStock-Amico | 4 / 3 |
 
-**Fuera de clase:** 4 fecha(s) con actividad · 6 commits · 5 merges
+**Fuera de clase:** 6 fecha(s) con actividad · 10 commits · 9 merges
 
 | Fecha | Repositorios | Commits / merges |
 |---|---|--:|
@@ -195,6 +195,8 @@ _Cumple **todos** los criterios del semáforo: no hay nada que arreglar para apr
 | 2026-11-08 | AutoStock-Amico | 2 / 3 |
 | 2026-11-09 | AutoStock-Amico | 2 / 1 |
 | 2026-11-10 | AutoStock-Amico | 0 / 1 |
+| 2026-11-14 | AutoStock-Amico | 1 / 2 |
+| 2026-11-15 | AutoStock-Amico | 3 / 2 |
 
 ## 7. Anexo: dónde mirar
 
